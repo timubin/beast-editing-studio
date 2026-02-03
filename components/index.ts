@@ -1,0 +1,22 @@
+
+export { default as Navbar } from './Navbar';
+export { default as Hero } from './Hero';
+export { default as Services } from './Services';
+export { default as Pricing } from './Pricing';
+export { default as Portfolio } from './Portfolio';
+export { default as WebDesignServices } from './WebDesignServices';
+export { default as StartupPackage } from './StartupPackage';
+export { default as TheBeastDifference } from './TheBeastDifference';
+export { default as Stats } from './Stats';
+export { default as Testimonial } from './Testimonial';
+export { default as Contact } from './Contact';
+export { default as Footer } from './Footer';
+export { default as AiProjectsSignup } from './AiProjectsSignup';
+export { default as ViewAllProjects } from './ViewAllProjects';
+export { default as Blog } from './Blog';
+export { default as TermsOfService } from './TermsOfService';
+export { default as PrivacyPolicy } from './PrivacyPolicy';
+export { default as About } from './About';
+export { default as Login } from './admin/Login';
+export { default as Dashboard } from './admin/Dashboard';
+export { default as WhatsAppButton } from './WhatsAppButton';
