@@ -11,10 +11,10 @@ const WhatsAppButton: React.FC = () => {
         >
             <div className="relative">
                 {/* Pulse Effect */}
-                <div className="absolute inset-0 bg-red-600 rounded-full animate-ping opacity-25 group-hover:opacity-50 transition-opacity"></div>
+                <div className="absolute inset-0 bg-[#25D366] rounded-full animate-ping opacity-25 group-hover:opacity-50 transition-opacity"></div>
 
                 {/* Button */}
-                <div className="relative bg-red-600 w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.5)] group-hover:bg-red-700 group-hover:scale-110 transition-all duration-300">
+                <div className="relative bg-[#25D366] w-16 h-16 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(37,211,102,0.5)] group-hover:bg-[#20bd5a] group-hover:scale-110 transition-all duration-300">
                     {/* WhatsApp Icon (SVG) */}
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

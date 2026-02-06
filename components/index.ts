@@ -20,3 +20,6 @@ export { default as About } from './About';
 export { default as Login } from './admin/Login';
 export { default as Dashboard } from './admin/Dashboard';
 export { default as WhatsAppButton } from './WhatsAppButton';
+export { default as DynamicPage } from './DynamicPage';
+export { default as HomepageCustomSections } from './HomepageCustomSections';
+export { default as IconRenderer } from './IconRenderer';

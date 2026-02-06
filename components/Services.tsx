@@ -1,29 +1,10 @@
-
 import React from 'react';
 import { Box, Film, Video, ArrowRight } from 'lucide-react';
-
-const services = [
-  {
-    icon: Box,
-    title: "3D Product Visualization",
-    description: "Photorealistic product renders and animations that bring your products to life with stunning detail and precision.",
-    items: ["Photorealistic Renders", "Product Animations", "360 Product Views", "AR Ready Assets"]
-  },
-  {
-    icon: Film,
-    title: "Motion Graphics & Animation",
-    description: "Eye-catching animations for brands. From logo animations to full explainer videos that captivate audiences.",
-    items: ["Logo Animations", "Explainer Videos", "Social Media Content", "Title Sequences"]
-  },
-  {
-    icon: Video,
-    title: "Commercial Video Production",
-    description: "Engaging commercials that sell. We create compelling video content that converts viewers into customers.",
-    items: ["TV Commercials", "Social Ads", "Product Videos", "Brand Films"]
-  }
-];
+import { useSiteContent } from '../context/SiteContext';
+import IconRenderer from './IconRenderer';
 
 const Services: React.FC = () => {
+  const { services } = useSiteContent();
   return (
     <section id="services" className="py-24 bg-black">
       <div className="container mx-auto px-6">
@@ -37,9 +18,9 @@ const Services: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {services.map((service, index) => (
-            <div key={index} className="bg-zinc-900/40 border border-zinc-800 p-10 rounded-2xl hover:border-red-600/50 transition-all group hover:-translate-y-2 duration-500">
+            <div key={service.id} className="bg-zinc-900/40 border border-zinc-800 p-10 rounded-2xl hover:border-red-600/50 transition-all group hover:-translate-y-2 duration-500">
               <div className="w-14 h-14 bg-black border border-red-600/30 rounded-xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 group-hover:shadow-[0_0_20px_rgba(220,38,38,0.4)]">
-                <service.icon className="w-8 h-8 text-red-600 group-hover:animate-pulse" />
+                <IconRenderer name={service.icon} className="w-8 h-8 text-red-600 group-hover:animate-pulse" />
               </div>
               <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
               <p className="text-zinc-500 mb-8 leading-relaxed">

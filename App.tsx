@@ -21,7 +21,9 @@ import {
   PrivacyPolicy,
   Login,
   Dashboard,
-  WhatsAppButton
+  WhatsAppButton,
+  DynamicPage,
+  HomepageCustomSections
 } from './components';
 
 const Home: React.FC = () => (
@@ -36,6 +38,7 @@ const Home: React.FC = () => (
     <About />
     <Stats />
     <Testimonial />
+    <HomepageCustomSections />
     <Contact />
   </>
 );
@@ -69,6 +72,7 @@ const App: React.FC = () => {
               <Route path="/blog" element={<Blog />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/page/:path" element={<DynamicPage />} />
             </Route>
 
             {/* Admin Routes - No Navbar or Footer */}

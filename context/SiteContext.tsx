@@ -1,5 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '../lib/firebase';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 
 // Define types for our content
 interface HeroContent {
@@ -44,12 +45,85 @@ interface TestimonialItem {
     avatar?: string;
 }
 
+interface SiteSettings {
+    siteName: string;
+    contactEmail: string;
+    facebookUrl: string;
+    instagramUrl: string;
+    twitterUrl: string;
+    footerText: string;
+}
+
+interface SiteTypography {
+    fontFamily: string;
+    headingFont: string;
+}
+
+interface CustomSection {
+    id: string;
+    name: string;
+    content: string;
+    type: 'section' | 'page';
+    path?: string;
+    isVisible: boolean;
+}
+
+interface MenuItem {
+    id: string;
+    label: string;
+    path: string;
+    type: 'link' | 'scroll';
+}
+
+interface ServiceItem {
+    id: string;
+    title: string;
+    description: string;
+    items: string[]; // Comma separated in UI
+    icon: string; // Icon name
+}
+
+interface PricingPlan {
+    id: string;
+    name: string;
+    duration: string;
+    price: string;
+    features: string[];
+    isPopular: boolean;
+    icon: string;
+}
+
+interface PortfolioItem {
+    id: string;
+    title: string;
+    category: string;
+    image: string;
+    description: string;
+}
+
+interface DifferenceItem {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+}
+
 interface SiteContent {
     hero: HeroContent;
     blogPosts: BlogPost[];
     about: AboutContent;
     stats: StatItem[];
     testimonials: TestimonialItem[];
+    settings: SiteSettings;
+    typography: SiteTypography;
+    customSections: CustomSection[];
+
+    // New Sections
+    menu: MenuItem[];
+    services: ServiceItem[];
+    pricing: PricingPlan[];
+    portfolio: PortfolioItem[];
+    features: DifferenceItem[];
 
     updateHero: (content: HeroContent) => void;
     addBlogPost: (post: Omit<BlogPost, 'id'>) => void;
@@ -57,6 +131,18 @@ interface SiteContent {
     updateAbout: (content: AboutContent) => void;
     updateStats: (stats: StatItem[]) => void;
     updateTestimonials: (testimonials: TestimonialItem[]) => void;
+    updateSettings: (settings: SiteSettings) => void;
+    updateTypography: (typography: SiteTypography) => void;
+    addCustomSection: (section: CustomSection) => void;
+    updateCustomSection: (section: CustomSection) => void;
+    deleteCustomSection: (id: string) => void;
+
+    // New Update Functions
+    updateMenu: (menu: MenuItem[]) => void;
+    updateServices: (services: ServiceItem[]) => void;
+    updatePricing: (pricing: PricingPlan[]) => void;
+    updatePortfolio: (portfolio: PortfolioItem[]) => void;
+    updateFeatures: (features: DifferenceItem[]) => void;
 }
 
 const defaultContent: SiteContent = {
@@ -127,13 +213,181 @@ const defaultContent: SiteContent = {
             quote: "Absolutely stunning 3D visualization. It helped us secure our Series A funding by showcasing our product perfectly."
         }
     ],
+    settings: {
+        siteName: "Beast Editing Studio",
+        contactEmail: "contact@beastediting.com",
+        facebookUrl: "https://facebook.com",
+        instagramUrl: "https://instagram.com",
+        twitterUrl: "https://twitter.com",
+        footerText: "© 2024 Beast Editing Studio. All rights reserved."
+    },
+    typography: {
+        fontFamily: "Inter",
+        headingFont: "Inter"
+    },
+    customSections: [],
+
+    // Defaults matching current hardcoded data
+    menu: [
+        { id: '1', label: 'Home', path: '/', type: 'link' },
+        { id: '2', label: 'Services', path: 'services', type: 'scroll' },
+        { id: '3', label: 'Blog', path: '/blog', type: 'link' },
+        { id: '4', label: 'Portfolio', path: 'portfolio', type: 'scroll' },
+        { id: '5', label: 'About', path: 'about', type: 'scroll' },
+        { id: '6', label: 'Contact', path: 'contact', type: 'scroll' }
+    ],
+    services: [
+        {
+            id: '1',
+            icon: 'Box',
+            title: "3D Product Visualization",
+            description: "Photorealistic product renders and animations that bring your products to life with stunning detail and precision.",
+            items: ["Photorealistic Renders", "Product Animations", "360 Product Views", "AR Ready Assets"]
+        },
+        {
+            id: '2',
+            icon: 'Film',
+            title: "Motion Graphics & Animation",
+            description: "Eye-catching animations for brands. From logo animations to full explainer videos that captivate audiences.",
+            items: ["Logo Animations", "Explainer Videos", "Social Media Content", "Title Sequences"]
+        },
+        {
+            id: '3',
+            icon: 'Video',
+            title: "Commercial Video Production",
+            description: "Engaging commercials that sell. We create compelling video content that converts viewers into customers.",
+            items: ["TV Commercials", "Social Ads", "Product Videos", "Brand Films"]
+        }
+    ],
+    pricing: [
+        {
+            id: '1',
+            name: "30 Seconds",
+            duration: "DURATION",
+            price: "599",
+            features: ["AI Scripting", "Professional Voice Over", "Sound Design", "Full Animation", "Video Production", "SFX & VFX"],
+            icon: 'Zap',
+            isPopular: false
+        },
+        {
+            id: '2',
+            name: "60 Seconds",
+            duration: "DURATION",
+            price: "1199",
+            features: ["AI Scripting", "Professional Voice Over", "Sound Design", "Full Animation", "Video Production", "SFX & VFX"],
+            icon: 'Sparkles',
+            isPopular: true
+        },
+        {
+            id: '3',
+            name: "120 Seconds",
+            duration: "DURATION",
+            price: "1999",
+            features: ["AI Scripting", "Professional Voice Over", "Sound Design", "Full Animation", "Video Production", "SFX & VFX"],
+            icon: 'Crown',
+            isPopular: false
+        }
+    ],
+    portfolio: [
+        {
+            id: '1',
+            title: "Premium Smartwatch 3D Render",
+            category: "3D",
+            image: "https://picsum.photos/seed/watch/800/600",
+            description: "Detailed visualization for tech marketing"
+        },
+        {
+            id: '2',
+            title: "Retro Tech Motion Graphics",
+            category: "Motion Graphics",
+            image: "https://picsum.photos/seed/retro/800/600",
+            description: "Branding animation for a vintage hardware shop"
+        },
+        {
+            id: '3',
+            title: "Premium Headphones Commercial",
+            category: "Commercials",
+            image: "https://picsum.photos/seed/audio/800/600",
+            description: "30-second product commercial with VFX"
+        },
+        {
+            id: '4',
+            title: "Fashion Boutique Website",
+            category: "Web Design",
+            image: "https://picsum.photos/seed/fashion/800/600",
+            description: "Minimalist e-commerce interface"
+        },
+        {
+            id: '5',
+            title: "Perfume Bottle 3D Product Shot",
+            category: "3D",
+            image: "https://picsum.photos/seed/perfume/800/600",
+            description: "High-end luxury brand visualization"
+        },
+        {
+            id: '6',
+            title: "Abstract Cube Animation",
+            category: "Motion Graphics",
+            image: "https://picsum.photos/seed/abstract/800/600",
+            description: "Geometric experiments in 3D space"
+        }
+    ],
+    features: [
+        {
+            id: '1',
+            title: "Premium Quality",
+            description: "We deliver nothing but the highest quality work that exceeds expectations.",
+            icon: 'Award'
+        },
+        {
+            id: '2',
+            title: "Fast Turnaround",
+            description: "Quick delivery without compromising on quality. We respect your deadlines.",
+            icon: 'Clock'
+        },
+        {
+            id: '3',
+            title: "Dedicated Support",
+            description: "Personal attention for every project with direct communication throughout.",
+            icon: 'Users'
+        },
+        {
+            id: '4',
+            title: "Cutting-Edge Tech",
+            description: "Using the latest tools and technologies to create stunning visual content.",
+            icon: 'Zap'
+        },
+        {
+            id: '5',
+            title: "Proven Results",
+            description: "Track record of success with 500+ projects and countless satisfied clients.",
+            icon: 'ShieldCheck'
+        },
+        {
+            id: '6',
+            title: "100% Satisfaction",
+            description: "We're not happy until you are. Full revisions until you're completely satisfied.",
+            icon: 'Heart'
+        }
+    ],
 
     updateHero: () => { },
     addBlogPost: () => { },
     deleteBlogPost: () => { },
     updateAbout: () => { },
     updateStats: () => { },
-    updateTestimonials: () => { }
+    updateTestimonials: () => { },
+    updateSettings: () => { },
+    updateTypography: () => { },
+    addCustomSection: () => { },
+    updateCustomSection: () => { },
+    deleteCustomSection: () => { },
+
+    updateMenu: () => { },
+    updateServices: () => { },
+    updatePricing: () => { },
+    updatePortfolio: () => { },
+    updateFeatures: () => { }
 };
 
 const SiteContext = createContext<SiteContent>(defaultContent);
@@ -144,48 +398,122 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [about, setAbout] = useState<AboutContent>(defaultContent.about);
     const [stats, setStats] = useState<StatItem[]>(defaultContent.stats);
     const [testimonials, setTestimonials] = useState<TestimonialItem[]>(defaultContent.testimonials);
+    const [settings, setSettings] = useState<SiteSettings>(defaultContent.settings);
+    const [typography, setTypography] = useState<SiteTypography>(defaultContent.typography);
+    const [customSections, setCustomSections] = useState<CustomSection[]>(defaultContent.customSections);
 
-    // Load from localStorage on mount
+    const [menu, setMenu] = useState<MenuItem[]>(defaultContent.menu);
+    const [services, setServices] = useState<ServiceItem[]>(defaultContent.services);
+    const [pricing, setPricing] = useState<PricingPlan[]>(defaultContent.pricing);
+    const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultContent.portfolio);
+    const [features, setFeatures] = useState<DifferenceItem[]>(defaultContent.features);
+
+    // Load from Firebase
     useEffect(() => {
-        const savedHero = localStorage.getItem('site_hero');
-        const savedPosts = localStorage.getItem('site_posts');
-        const savedAbout = localStorage.getItem('site_about');
-        const savedStats = localStorage.getItem('site_stats');
-        const savedTestimonials = localStorage.getItem('site_testimonials');
+        const unsubscribe = onSnapshot(doc(db, "site-content", "main"), (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.data() as Partial<SiteContent>;
+                if (data.hero) setHero(data.hero);
+                if (data.blogPosts) setBlogPosts(data.blogPosts);
+                if (data.about) setAbout(data.about);
+                if (data.stats) setStats(data.stats);
+                if (data.testimonials) setTestimonials(data.testimonials);
+                if (data.settings) setSettings(data.settings);
+                if (data.typography) setTypography(data.typography);
+                if (data.customSections) setCustomSections(data.customSections);
+                if (data.menu) setMenu(data.menu);
+                if (data.services) setServices(data.services);
+                if (data.pricing) setPricing(data.pricing);
+                if (data.portfolio) setPortfolio(data.portfolio);
+                if (data.features) setFeatures(data.features);
+            } else {
+                // Initialize DB if empty
+                setDoc(snapshot.ref, {
+                    hero: defaultContent.hero,
+                    blogPosts: defaultContent.blogPosts,
+                    about: defaultContent.about,
+                    stats: defaultContent.stats,
+                    testimonials: defaultContent.testimonials,
+                    settings: defaultContent.settings,
+                    typography: defaultContent.typography,
+                    customSections: defaultContent.customSections,
+                    menu: defaultContent.menu,
+                    services: defaultContent.services,
+                    pricing: defaultContent.pricing,
+                    portfolio: defaultContent.portfolio,
+                    features: defaultContent.features
+                }, { merge: true });
+            }
+        }, (error) => {
+            console.error("Detail load error:", error);
+            // Fallback to localStorage if Firebase fails (e.g. invalid config)
+            const loadLocal = (key: string, setter: (val: any) => void) => {
+                const saved = localStorage.getItem(key);
+                if (saved && saved !== "undefined" && saved !== "null") try { setter(JSON.parse(saved)); } catch (e) { }
+            };
+            loadLocal('site_hero', setHero);
+        });
 
-        if (savedHero) setHero(JSON.parse(savedHero));
-        if (savedPosts) setBlogPosts(JSON.parse(savedPosts));
-        if (savedAbout) setAbout(JSON.parse(savedAbout));
-        if (savedStats) setStats(JSON.parse(savedStats));
-        if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
+        return () => unsubscribe();
     }, []);
 
-    // Save to localStorage whenever changes
-    useEffect(() => { localStorage.setItem('site_hero', JSON.stringify(hero)); }, [hero]);
-    useEffect(() => { localStorage.setItem('site_posts', JSON.stringify(blogPosts)); }, [blogPosts]);
-    useEffect(() => { localStorage.setItem('site_about', JSON.stringify(about)); }, [about]);
-    useEffect(() => { localStorage.setItem('site_stats', JSON.stringify(stats)); }, [stats]);
-    useEffect(() => { localStorage.setItem('site_testimonials', JSON.stringify(testimonials)); }, [testimonials]);
-
-    const updateHero = (content: HeroContent) => setHero(content);
-
-    const addBlogPost = (post: Omit<BlogPost, 'id'>) => {
-        const newPost = { ...post, id: Date.now() };
-        setBlogPosts([newPost, ...blogPosts]);
+    // Database Updaters
+    const saveToDb = async (field: string, data: any) => {
+        try {
+            await setDoc(doc(db, "site-content", "main"), { [field]: data }, { merge: true });
+        } catch (e) {
+            console.error("Error saving to DB:", e);
+            alert("Error saving: Check your internet connection or admin privileges.");
+        }
     };
 
-    const deleteBlogPost = (id: number) => setBlogPosts(blogPosts.filter(p => p.id !== id));
+    const updateHero = (content: HeroContent) => { setHero(content); saveToDb('hero', content); };
+    const addBlogPost = (post: Omit<BlogPost, 'id'>) => {
+        const newPost = { ...post, id: Date.now() };
+        const newPosts = [newPost, ...blogPosts];
+        setBlogPosts(newPosts);
+        saveToDb('blogPosts', newPosts);
+    };
+    const deleteBlogPost = (id: number) => {
+        const newPosts = blogPosts.filter(p => p.id !== id);
+        setBlogPosts(newPosts);
+        saveToDb('blogPosts', newPosts);
+    };
+    const updateAbout = (content: AboutContent) => { setAbout(content); saveToDb('about', content); };
+    const updateStats = (stats: StatItem[]) => { setStats(stats); saveToDb('stats', stats); };
+    const updateTestimonials = (items: TestimonialItem[]) => { setTestimonials(items); saveToDb('testimonials', items); };
+    const updateSettings = (s: SiteSettings) => { setSettings(s); saveToDb('settings', s); };
+    const updateTypography = (t: SiteTypography) => { setTypography(t); saveToDb('typography', t); };
 
-    const updateAbout = (content: AboutContent) => setAbout(content);
+    const addCustomSection = (section: CustomSection) => {
+        const newSections = [...customSections, section];
+        setCustomSections(newSections);
+        saveToDb('customSections', newSections);
+    };
+    const updateCustomSection = (section: CustomSection) => {
+        const newSections = customSections.map(s => s.id === section.id ? section : s);
+        setCustomSections(newSections);
+        saveToDb('customSections', newSections);
+    };
+    const deleteCustomSection = (id: string) => {
+        const newSections = customSections.filter(s => s.id !== id);
+        setCustomSections(newSections);
+        saveToDb('customSections', newSections);
+    };
 
-    const updateStats = (newStats: StatItem[]) => setStats(newStats);
-
-    const updateTestimonials = (newTestimonials: TestimonialItem[]) => setTestimonials(newTestimonials);
+    const updateMenu = (items: MenuItem[]) => { setMenu(items); saveToDb('menu', items); };
+    const updateServices = (items: ServiceItem[]) => { setServices(items); saveToDb('services', items); };
+    const updatePricing = (items: PricingPlan[]) => { setPricing(items); saveToDb('pricing', items); };
+    const updatePortfolio = (items: PortfolioItem[]) => { setPortfolio(items); saveToDb('portfolio', items); };
+    const updateFeatures = (items: DifferenceItem[]) => { setFeatures(items); saveToDb('features', items); };
 
     return (
         <SiteContext.Provider value={{
-            hero, blogPosts, about, stats, testimonials,
-            updateHero, addBlogPost, deleteBlogPost, updateAbout, updateStats, updateTestimonials
+            hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
+            menu, services, pricing, portfolio, features,
+            updateHero, addBlogPost, deleteBlogPost, updateAbout, updateStats, updateTestimonials, updateSettings, updateTypography,
+            addCustomSection, updateCustomSection, deleteCustomSection,
+            updateMenu, updateServices, updatePricing, updatePortfolio, updateFeatures
         }}>
             {children}
         </SiteContext.Provider>

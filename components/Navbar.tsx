@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { useSiteContent } from '../context/SiteContext';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { menu } = useSiteContent();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,12 +54,17 @@ const Navbar: React.FC = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8">
-          <Link to="/" className="text-sm font-medium hover:text-red-600 transition-colors">Home</Link>
-          <button onClick={() => handleNavClick('services')} className="text-sm font-medium hover:text-red-600 transition-colors">Services</button>
-          <Link to="/blog" className="text-sm font-medium hover:text-red-600 transition-colors">Blog</Link>
-          <button onClick={() => handleNavClick('portfolio')} className="text-sm font-medium hover:text-red-600 transition-colors">Portfolio</button>
-          <button onClick={() => handleNavClick('about')} className="text-sm font-medium hover:text-red-600 transition-colors">About</button>
-          <button onClick={() => handleNavClick('contact')} className="text-sm font-medium hover:text-red-600 transition-colors">Contact</button>
+          {menu.map((item) => (
+            item.type === 'link' ? (
+              <Link key={item.id} to={item.path} className="text-sm font-medium hover:text-red-600 transition-colors">
+                {item.label}
+              </Link>
+            ) : (
+              <button key={item.id} onClick={() => handleNavClick(item.path)} className="text-sm font-medium hover:text-red-600 transition-colors">
+                {item.label}
+              </button>
+            )
+          ))}
         </div>
 
         <div className="hidden md:block">
@@ -76,12 +83,17 @@ const Navbar: React.FC = () => {
 
         {/* Mobile Menu Overlay */}
         <div className={`fixed inset-0 bg-black/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center space-y-8 transition-transform duration-300 md:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-bold hover:text-red-600 transition-colors">Home</Link>
-          <button onClick={() => handleNavClick('services')} className="text-2xl font-bold hover:text-red-600 transition-colors">Services</button>
-          <Link to="/blog" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-bold hover:text-red-600 transition-colors">Blog</Link>
-          <button onClick={() => handleNavClick('portfolio')} className="text-2xl font-bold hover:text-red-600 transition-colors">Portfolio</button>
-          <button onClick={() => handleNavClick('about')} className="text-2xl font-bold hover:text-red-600 transition-colors">About</button>
-          <button onClick={() => handleNavClick('contact')} className="text-2xl font-bold hover:text-red-600 transition-colors">Contact</button>
+          {menu.map((item) => (
+            item.type === 'link' ? (
+              <Link key={item.id} to={item.path} onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-bold hover:text-red-600 transition-colors">
+                {item.label}
+              </Link>
+            ) : (
+              <button key={item.id} onClick={() => handleNavClick(item.path)} className="text-2xl font-bold hover:text-red-600 transition-colors">
+                {item.label}
+              </button>
+            )
+          ))}
           <Link to="/ai-signup" onClick={() => setIsMobileMenuOpen(false)} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-md text-lg font-bold transition-all shadow-lg shadow-red-600/20 active:scale-95">
             Get Started
           </Link>
