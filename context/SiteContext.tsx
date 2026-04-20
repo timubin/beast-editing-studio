@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { db } from '../lib/firebase';
+import { db, storage } from '../lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Define types for our content
 interface HeroContent {
@@ -143,6 +144,7 @@ interface SiteContent {
     updatePricing: (pricing: PricingPlan[]) => void;
     updatePortfolio: (portfolio: PortfolioItem[]) => void;
     updateFeatures: (features: DifferenceItem[]) => void;
+    uploadImage: (file: File, folder: string) => Promise<string>;
 }
 
 const defaultContent: SiteContent = {
@@ -387,7 +389,8 @@ const defaultContent: SiteContent = {
     updateServices: () => { },
     updatePricing: () => { },
     updatePortfolio: () => { },
-    updateFeatures: () => { }
+    updateFeatures: () => { },
+    uploadImage: async () => ''
 };
 
 const SiteContext = createContext<SiteContent>(defaultContent);
@@ -507,14 +510,27 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updatePortfolio = (items: PortfolioItem[]) => { setPortfolio(items); saveToDb('portfolio', items); };
     const updateFeatures = (items: DifferenceItem[]) => { setFeatures(items); saveToDb('features', items); };
 
+    const uploadImage = async (file: File, folder: string): Promise<string> => {
+        const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(fileRef, file);
+        return await getDownloadURL(snapshot.ref);
+    };
+
+    // Memoize the context value to prevent unnecessary re-renders of consumers
+    const value = React.useMemo(() => ({
+        hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
+        menu, services, pricing, portfolio, features,
+        updateHero, addBlogPost, deleteBlogPost, updateAbout, updateStats, updateTestimonials, updateSettings, updateTypography,
+        addCustomSection, updateCustomSection, deleteCustomSection,
+        updateMenu, updateServices, updatePricing, updatePortfolio, updateFeatures,
+        uploadImage
+    }), [
+        hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
+        menu, services, pricing, portfolio, features
+    ]);
+
     return (
-        <SiteContext.Provider value={{
-            hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
-            menu, services, pricing, portfolio, features,
-            updateHero, addBlogPost, deleteBlogPost, updateAbout, updateStats, updateTestimonials, updateSettings, updateTypography,
-            addCustomSection, updateCustomSection, deleteCustomSection,
-            updateMenu, updateServices, updatePricing, updatePortfolio, updateFeatures
-        }}>
+        <SiteContext.Provider value={value}>
             {children}
         </SiteContext.Provider>
     );

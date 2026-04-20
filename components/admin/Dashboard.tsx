@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSiteContent } from '../../context/SiteContext';
-import { LayoutDashboard, Type, FileText, Settings, LogOut, Save, Trash2, Plus, Users, BarChart, MessageSquare, Code, List, Briefcase, CreditCard, Star, Menu as MenuIcon, Edit3 } from 'lucide-react';
+import { LayoutDashboard, Type, FileText, Settings, LogOut, Save, Trash2, Plus, Users, BarChart, MessageSquare, Code, List, Briefcase, CreditCard, Star, Menu as MenuIcon, Edit3, Upload, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
@@ -18,7 +18,8 @@ const Dashboard: React.FC = () => {
         services, updateServices,
         pricing, updatePricing,
         portfolio, updatePortfolio,
-        features, updateFeatures
+        features, updateFeatures,
+        uploadImage
     } = useSiteContent();
 
     const [activeTab, setActiveTab] = useState('hero');
@@ -68,14 +69,57 @@ const Dashboard: React.FC = () => {
         imageUrl: ''
     });
 
-    // Update forms when context changes
+    const [uploading, setUploading] = useState<string | null>(null); // Track which item is uploading
+
+    const handleFileUpload = async (file: File, folder: string, callback: (url: string) => void) => {
+        try {
+            setUploading(folder);
+            const url = await uploadImage(file, folder);
+            callback(url);
+            alert('Image uploaded successfully!');
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Error uploading image. Make sure Firebase Storage is configured correctly.');
+        } finally {
+            setUploading(null);
+        }
+    };
+
+    // Initialize forms once when data is loaded, but DON'T overwrite while user is editing
+    const [isInitialized, setIsInitialized] = useState(false);
+
     useEffect(() => {
+        if (!isInitialized && (hero.titleLine1 || (portfolio && portfolio.length > 0))) {
+            setHeroForm(hero);
+            setAboutForm(about);
+            setStatsForm(stats);
+            setTestimonialsForm(testimonials);
+            setSettingsForm(settings);
+            setTypographyForm(typography);
+            setMenuForm(menu);
+            setServicesForm(services);
+            setPricingForm(pricing);
+            setPortfolioForm(portfolio);
+            setFeaturesForm(features);
+            setIsInitialized(true);
+        }
+    }, [hero, about, stats, testimonials, settings, typography, menu, services, pricing, portfolio, features, isInitialized]);
+
+    // Optional: Function to refresh forms from context data
+    const refreshFromDb = () => {
+        setHeroForm(hero);
+        setAboutForm(about);
+        setStatsForm(stats);
+        setTestimonialsForm(testimonials);
+        setSettingsForm(settings);
+        setTypographyForm(typography);
         setMenuForm(menu);
         setServicesForm(services);
         setPricingForm(pricing);
         setPortfolioForm(portfolio);
         setFeaturesForm(features);
-    }, [menu, services, pricing, portfolio, features]);
+        alert('Form data refreshed from database.');
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('isAdmin');
@@ -524,12 +568,29 @@ const Dashboard: React.FC = () => {
                                             placeholder="Category"
                                             className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
                                         />
-                                        <input
-                                            value={item.image}
-                                            onChange={(e) => updateListItem(portfolioForm, setPortfolioForm, index, 'image', e.target.value)}
-                                            placeholder="Image URL"
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
-                                        />
+                                        <div className="space-y-2">
+                                            <input
+                                                value={item.image}
+                                                onChange={(e) => updateListItem(portfolioForm, setPortfolioForm, index, 'image', e.target.value)}
+                                                placeholder="Image URL"
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
+                                            />
+                                            <div className="flex items-center gap-2">
+                                                <label className="flex-1 flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-xs font-bold py-2 rounded-lg cursor-pointer transition-all">
+                                                    {uploading === `portfolio-${index}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                                    {uploading === `portfolio-${index}` ? 'Uploading...' : 'Upload from PC'}
+                                                    <input 
+                                                        type="file" 
+                                                        className="hidden" 
+                                                        accept="image/*"
+                                                        onChange={(e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) handleFileUpload(file, 'portfolio', (url) => updateListItem(portfolioForm, setPortfolioForm, index, 'image', url));
+                                                        }}
+                                                    />
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                     <textarea
                                         value={item.description}
@@ -616,13 +677,28 @@ const Dashboard: React.FC = () => {
                                         className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none"
                                         required
                                     />
-                                    <input
-                                        placeholder="Image URL"
-                                        value={newPost.imageUrl}
-                                        onChange={(e) => setNewPost({ ...newPost, imageUrl: e.target.value })}
-                                        className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none"
-                                        required
-                                    />
+                                    <div className="space-y-2">
+                                        <input
+                                            placeholder="Image URL"
+                                            value={newPost.imageUrl}
+                                            onChange={(e) => setNewPost({ ...newPost, imageUrl: e.target.value })}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none"
+                                            required
+                                        />
+                                        <label className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-xs font-bold py-2 rounded-lg cursor-pointer transition-all">
+                                            {uploading === 'new-blog' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                            {uploading === 'new-blog' ? 'Uploading...' : 'Upload Image from PC'}
+                                            <input 
+                                                type="file" 
+                                                className="hidden" 
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) handleFileUpload(file, 'blog', (url) => setNewPost({ ...newPost, imageUrl: url }));
+                                                }}
+                                            />
+                                        </label>
+                                    </div>
                                     <input
                                         placeholder="Date"
                                         value={newPost.date}
