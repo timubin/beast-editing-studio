@@ -1,22 +1,36 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
+import { auth } from '../../lib/firebase';
+import { signInAnonymously } from 'firebase/auth';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Hardcoded credentials for Demo
-        if (email.trim() === 'admin@beast.com' && password.trim() === 'admin123') {
-            localStorage.setItem('isAdmin', 'true');
-            navigate('/admin/dashboard');
-        } else {
-            setError('Invalid email or password');
+        setIsLoggingIn(true);
+        setError('');
+
+        try {
+            // Internal Credentials check
+            if (email.trim() === 'admin@beast.com' && password.trim() === 'admin123') {
+                // Perform Firebase login to satisfy Firestore rules
+                await signInAnonymously(auth);
+                localStorage.setItem('isAdmin', 'true');
+                navigate('/admin/dashboard');
+            } else {
+                setError('Invalid email or password');
+            }
+        } catch (err: any) {
+            console.error("Firebase Auth Error:", err);
+            setError('Login failed: ' + err.message);
+        } finally {
+            setIsLoggingIn(false);
         }
     };
 
@@ -69,8 +83,12 @@ const Login: React.FC = () => {
                         </div>
                     </div>
 
-                    <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-red-600/20 active:scale-95">
-                        Login
+                    <button 
+                        type="submit" 
+                        disabled={isLoggingIn}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-red-600/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isLoggingIn ? 'Logging in...' : 'Login'}
                     </button>
                 </form>
 
