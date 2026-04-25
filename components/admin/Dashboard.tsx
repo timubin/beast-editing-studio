@@ -16,9 +16,12 @@ const Dashboard: React.FC = () => {
         customSections, addCustomSection, updateCustomSection, deleteCustomSection,
         menu, updateMenu,
         services, updateServices,
+        webServices, updateWebServices,
         pricing, updatePricing,
         portfolio, updatePortfolio,
         features, updateFeatures,
+        contact, updateContact,
+        startupPackage, updateStartupPackage,
         uploadImage
     } = useSiteContent();
 
@@ -36,6 +39,11 @@ const Dashboard: React.FC = () => {
         facebookUrl: '',
         instagramUrl: '',
         twitterUrl: '',
+        youtubeUrl: '',
+        linkedinUrl: '',
+        whatsappNumber: '',
+        footerTagline: '',
+        location: '',
         footerText: ''
     });
     const [typographyForm, setTypographyForm] = useState(typography || {
@@ -46,9 +54,12 @@ const Dashboard: React.FC = () => {
     // New Sections State
     const [menuForm, setMenuForm] = useState(menu);
     const [servicesForm, setServicesForm] = useState(services);
+    const [webServicesForm, setWebServicesForm] = useState(webServices);
     const [pricingForm, setPricingForm] = useState(pricing);
     const [portfolioForm, setPortfolioForm] = useState(portfolio);
     const [featuresForm, setFeaturesForm] = useState(features);
+    const [contactForm, setContactForm] = useState(contact);
+    const [startupPackageForm, setStartupPackageForm] = useState(startupPackage);
 
     // Custom Section Form State
     const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
@@ -85,25 +96,28 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // Initialize forms once when data is loaded, but DON'T overwrite while user is editing
-    const [isInitialized, setIsInitialized] = useState(false);
+    useEffect(() => {
+        if (localStorage.getItem('isAdmin') !== 'true') {
+            navigate('/login', { replace: true });
+        }
+    }, [navigate]);
 
     useEffect(() => {
-        if (!isInitialized && (hero.titleLine1 || (portfolio && portfolio.length > 0))) {
-            setHeroForm(hero);
-            setAboutForm(about);
-            setStatsForm(stats);
-            setTestimonialsForm(testimonials);
-            setSettingsForm(settings);
-            setTypographyForm(typography);
-            setMenuForm(menu);
-            setServicesForm(services);
-            setPricingForm(pricing);
-            setPortfolioForm(portfolio);
-            setFeaturesForm(features);
-            setIsInitialized(true);
-        }
-    }, [hero, about, stats, testimonials, settings, typography, menu, services, pricing, portfolio, features, isInitialized]);
+        setHeroForm(hero);
+        setAboutForm(about);
+        setStatsForm(stats);
+        setTestimonialsForm(testimonials);
+        setSettingsForm(settings);
+        setTypographyForm(typography);
+        setMenuForm(menu);
+        setServicesForm(services);
+        setWebServicesForm(webServices);
+        setPricingForm(pricing);
+        setPortfolioForm(portfolio);
+        setFeaturesForm(features);
+        setContactForm(contact);
+        setStartupPackageForm(startupPackage);
+    }, [hero, about, stats, testimonials, settings, typography, menu, services, webServices, pricing, portfolio, features, contact, startupPackage]);
 
     // Optional: Function to refresh forms from context data
     const refreshFromDb = () => {
@@ -115,9 +129,12 @@ const Dashboard: React.FC = () => {
         setTypographyForm(typography);
         setMenuForm(menu);
         setServicesForm(services);
+        setWebServicesForm(webServices);
         setPricingForm(pricing);
         setPortfolioForm(portfolio);
         setFeaturesForm(features);
+        setContactForm(contact);
+        setStartupPackageForm(startupPackage);
         alert('Form data refreshed from database.');
     };
 
@@ -167,6 +184,11 @@ const Dashboard: React.FC = () => {
         alert('Services Updated!');
     };
 
+    const handleWebServicesSave = () => {
+        updateWebServices(webServicesForm);
+        alert('Web Services Updated!');
+    };
+
     const handlePricingSave = () => {
         updatePricing(pricingForm);
         alert('Pricing Updated!');
@@ -180,6 +202,16 @@ const Dashboard: React.FC = () => {
     const handleFeaturesSave = () => {
         updateFeatures(featuresForm);
         alert('Features Updated!');
+    };
+
+    const handleContactSave = () => {
+        updateContact(contactForm);
+        alert('Contact Section Updated!');
+    };
+
+    const handleStartupPackageSave = () => {
+        updateStartupPackage(startupPackageForm);
+        alert('Startup Package Updated!');
     };
 
     const handleCustomSectionSave = (e: React.FormEvent) => {
@@ -256,6 +288,25 @@ const Dashboard: React.FC = () => {
     // Helpers
     const updateStatItem = (index: number, field: string, value: string) => updateListItem(statsForm, setStatsForm, index, field, value);
     const updateTestimonialItem = (index: number, field: string, value: string) => updateListItem(testimonialsForm, setTestimonialsForm, index, field, value);
+    const updateStartupItem = (index: number, field: string, value: string) => {
+        const items = [...startupPackageForm.items];
+        items[index] = { ...items[index], [field]: value };
+        setStartupPackageForm({ ...startupPackageForm, items });
+    };
+    const addStartupItem = () => {
+        setStartupPackageForm({
+            ...startupPackageForm,
+            items: [...startupPackageForm.items, { id: Date.now().toString(), icon: 'Check', text: 'New package item' }]
+        });
+    };
+    const deleteStartupItem = (index: number) => {
+        if (window.confirm("Are you sure?")) {
+            setStartupPackageForm({
+                ...startupPackageForm,
+                items: startupPackageForm.items.filter((_, itemIndex) => itemIndex !== index)
+            });
+        }
+    };
 
     return (
         <div className="min-h-screen bg-black text-white flex">
@@ -272,9 +323,12 @@ const Dashboard: React.FC = () => {
                         { id: 'about', icon: Users, label: 'About Us' },
                         { id: 'menu', icon: MenuIcon, label: 'Menu / Nav' },
                         { id: 'services', icon: Briefcase, label: 'Services' },
+                        { id: 'web-services', icon: Code, label: 'Web Services' },
                         { id: 'pricing', icon: CreditCard, label: 'Pricing' },
                         { id: 'portfolio', icon: List, label: 'Portfolio' },
                         { id: 'features', icon: Star, label: 'Features / Benefits' },
+                        { id: 'startup', icon: LayoutDashboard, label: 'Startup Package' },
+                        { id: 'contact', icon: MessageSquare, label: 'Contact' },
                         { id: 'stats', icon: BarChart, label: 'Stats' },
                         { id: 'testimonials', icon: MessageSquare, label: 'Testimonials' },
                         { id: 'blog', icon: FileText, label: 'Blog Posts' },
@@ -474,6 +528,64 @@ const Dashboard: React.FC = () => {
                     </div>
                 )}
 
+                {activeTab === 'web-services' && (
+                    <div className="space-y-6 animate-fade-in">
+                        <div className="flex justify-end">
+                            <button onClick={() => addItemToList(webServicesForm, setWebServicesForm, { title: 'New Web Service', description: '', icon: 'FileText', tags: [] })} className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                                <Plus className="w-4 h-4" /> Add Web Service
+                            </button>
+                        </div>
+                        {webServicesForm.map((item, index) => (
+                            <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4 relative">
+                                <div className="absolute top-4 right-4">
+                                    <button onClick={() => deleteItemFromList(webServicesForm, setWebServicesForm, index)} className="p-2 text-zinc-500 hover:text-red-500">
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs uppercase font-bold text-zinc-500 mb-1 block">Title</label>
+                                        <input
+                                            value={item.title}
+                                            onChange={(e) => updateListItem(webServicesForm, setWebServicesForm, index, 'title', e.target.value)}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs uppercase font-bold text-zinc-500 mb-1 block">Icon Name (Lucide)</label>
+                                        <input
+                                            value={item.icon}
+                                            onChange={(e) => updateListItem(webServicesForm, setWebServicesForm, index, 'icon', e.target.value)}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs uppercase font-bold text-zinc-500 mb-1 block">Description</label>
+                                    <textarea
+                                        value={item.description}
+                                        onChange={(e) => updateListItem(webServicesForm, setWebServicesForm, index, 'description', e.target.value)}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none h-20"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs uppercase font-bold text-zinc-500 mb-1 block">Tags (One per line)</label>
+                                    <textarea
+                                        value={item.tags.join('\n')}
+                                        onChange={(e) => updateListItem(webServicesForm, setWebServicesForm, index, 'tags', e.target.value.split('\n').filter(Boolean))}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none h-24"
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                        <div className="flex justify-end mt-8">
+                            <button onClick={handleWebServicesSave} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all">
+                                <Save className="w-5 h-5" /> Save Web Services
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'pricing' && (
                     <div className="space-y-6 animate-fade-in">
                         <div className="flex justify-end">
@@ -656,6 +768,145 @@ const Dashboard: React.FC = () => {
                     </div>
                 )}
 
+                {activeTab === 'startup' && (
+                    <div className="max-w-5xl space-y-8 animate-fade-in">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Title</label>
+                                    <input
+                                        value={startupPackageForm.title}
+                                        onChange={(e) => setStartupPackageForm({ ...startupPackageForm, title: e.target.value })}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Icon Name</label>
+                                    <input
+                                        value={startupPackageForm.icon}
+                                        onChange={(e) => setStartupPackageForm({ ...startupPackageForm, icon: e.target.value })}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Description</label>
+                                    <textarea
+                                        value={startupPackageForm.description}
+                                        onChange={(e) => setStartupPackageForm({ ...startupPackageForm, description: e.target.value })}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none h-24 resize-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Button Label</label>
+                                    <input
+                                        value={startupPackageForm.ctaLabel}
+                                        onChange={(e) => setStartupPackageForm({ ...startupPackageForm, ctaLabel: e.target.value })}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Note</label>
+                                    <input
+                                        value={startupPackageForm.note}
+                                        onChange={(e) => setStartupPackageForm({ ...startupPackageForm, note: e.target.value })}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-between items-center pt-4 border-t border-zinc-800">
+                                <h3 className="text-lg font-bold">Package Items</h3>
+                                <button onClick={addStartupItem} className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                                    <Plus className="w-4 h-4" /> Add Item
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                {startupPackageForm.items.map((item, index) => (
+                                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-[160px_1fr_48px] gap-3 items-center">
+                                        <input
+                                            value={item.icon}
+                                            onChange={(e) => updateStartupItem(index, 'icon', e.target.value)}
+                                            placeholder="Icon"
+                                            className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
+                                        />
+                                        <input
+                                            value={item.text}
+                                            onChange={(e) => updateStartupItem(index, 'text', e.target.value)}
+                                            placeholder="Item text"
+                                            className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
+                                        />
+                                        <button onClick={() => deleteStartupItem(index)} className="p-2 text-zinc-500 hover:text-red-500">
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex justify-end">
+                                <button onClick={handleStartupPackageSave} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all">
+                                    <Save className="w-5 h-5" /> Save Startup Package
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'contact' && (
+                    <div className="max-w-4xl space-y-8 animate-fade-in">
+                        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
+                            <h3 className="text-xl font-bold mb-6">Contact Section</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Eyebrow</label>
+                                    <input value={contactForm.eyebrow} onChange={(e) => setContactForm({ ...contactForm, eyebrow: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Highlighted Title</label>
+                                    <input value={contactForm.highlightedTitle} onChange={(e) => setContactForm({ ...contactForm, highlightedTitle: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Title</label>
+                                    <input value={contactForm.title} onChange={(e) => setContactForm({ ...contactForm, title: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Description</label>
+                                    <textarea value={contactForm.description} onChange={(e) => setContactForm({ ...contactForm, description: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none h-24 resize-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Email</label>
+                                    <input value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">WhatsApp Number</label>
+                                    <input value={contactForm.whatsappNumber} onChange={(e) => setContactForm({ ...contactForm, whatsappNumber: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Location</label>
+                                    <input value={contactForm.location} onChange={(e) => setContactForm({ ...contactForm, location: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Response Time</label>
+                                    <input value={contactForm.responseTime} onChange={(e) => setContactForm({ ...contactForm, responseTime: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Notice Title</label>
+                                    <input value={contactForm.noticeTitle} onChange={(e) => setContactForm({ ...contactForm, noticeTitle: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Notice Text</label>
+                                    <input value={contactForm.noticeText} onChange={(e) => setContactForm({ ...contactForm, noticeText: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all" />
+                                </div>
+                            </div>
+                            <div className="mt-8 flex justify-end">
+                                <button onClick={handleContactSave} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all">
+                                    <Save className="w-5 h-5" /> Save Contact
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'blog' && (
                     <div className="space-y-8 animate-fade-in">
                         {/* New Post Form */}
@@ -810,10 +1061,15 @@ const Dashboard: React.FC = () => {
                 {activeTab === 'stats' && (
                     <div className="max-w-4xl space-y-8 animate-fade-in">
                         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
-                            <h3 className="text-xl font-bold mb-6">Edit Statistics</h3>
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-bold">Edit Statistics</h3>
+                                <button onClick={() => addItemToList(statsForm, setStatsForm, { label: 'New Stat', value: '0', suffix: '' })} className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                                    <Plus className="w-4 h-4" /> Add Stat
+                                </button>
+                            </div>
                             <div className="space-y-6">
                                 {statsForm.map((stat, index) => (
-                                    <div key={stat.id} className="grid grid-cols-3 gap-4 pb-4 border-b border-zinc-800 last:border-0">
+                                    <div key={stat.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_48px] gap-4 pb-4 border-b border-zinc-800 last:border-0 items-end">
                                         <div className="col-span-1">
                                             <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">Label</label>
                                             <input
@@ -838,6 +1094,9 @@ const Dashboard: React.FC = () => {
                                                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:border-red-600 outline-none"
                                             />
                                         </div>
+                                        <button onClick={() => deleteItemFromList(statsForm, setStatsForm, index)} className="p-2 text-zinc-500 hover:text-red-500">
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
                                 ))}
                             </div>
@@ -852,9 +1111,19 @@ const Dashboard: React.FC = () => {
 
                 {activeTab === 'testimonials' && (
                     <div className="space-y-8 animate-fade-in pb-20">
+                        <div className="flex justify-end">
+                            <button onClick={() => addItemToList(testimonialsForm, setTestimonialsForm, { name: 'New Client', role: 'Role / Company', quote: 'Client quote', avatar: '' })} className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+                                <Plus className="w-4 h-4" /> Add Testimonial
+                            </button>
+                        </div>
                         {testimonialsForm.map((testimonial, index) => (
                             <div key={testimonial.id} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 relative">
-                                <div className="absolute top-4 right-4 text-xs font-bold text-zinc-600 bg-zinc-800 px-3 py-1 rounded-full">#{index + 1}</div>
+                                <div className="absolute top-4 right-4 flex items-center gap-2">
+                                    <span className="text-xs font-bold text-zinc-600 bg-zinc-800 px-3 py-1 rounded-full">#{index + 1}</span>
+                                    <button onClick={() => deleteItemFromList(testimonialsForm, setTestimonialsForm, index)} className="p-2 text-zinc-500 hover:text-red-500">
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
@@ -965,6 +1234,22 @@ const Dashboard: React.FC = () => {
                                             className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
                                         />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">WhatsApp Number</label>
+                                        <input
+                                            value={settingsForm.whatsappNumber}
+                                            onChange={(e) => setSettingsForm({ ...settingsForm, whatsappNumber: e.target.value })}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Location</label>
+                                        <input
+                                            value={settingsForm.location}
+                                            onChange={(e) => setSettingsForm({ ...settingsForm, location: e.target.value })}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
 
                                 <h4 className="text-lg font-bold mt-8 mb-4 text-zinc-400">Social Media Links</h4>
@@ -993,6 +1278,31 @@ const Dashboard: React.FC = () => {
                                             className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
                                         />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">YouTube URL</label>
+                                        <input
+                                            value={settingsForm.youtubeUrl}
+                                            onChange={(e) => setSettingsForm({ ...settingsForm, youtubeUrl: e.target.value })}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">LinkedIn URL</label>
+                                        <input
+                                            value={settingsForm.linkedinUrl}
+                                            onChange={(e) => setSettingsForm({ ...settingsForm, linkedinUrl: e.target.value })}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-6">
+                                    <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Footer Tagline</label>
+                                    <textarea
+                                        value={settingsForm.footerTagline}
+                                        onChange={(e) => setSettingsForm({ ...settingsForm, footerTagline: e.target.value })}
+                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all h-24 resize-none"
+                                    />
                                 </div>
 
                                 <div className="mt-6">

@@ -8,6 +8,8 @@ const Testimonial: React.FC = () => {
   const [fade, setFade] = React.useState(true);
 
   React.useEffect(() => {
+    if (testimonials.length === 0) return;
+
     const interval = setInterval(() => {
       setFade(false);
       setTimeout(() => {
@@ -16,7 +18,15 @@ const Testimonial: React.FC = () => {
       }, 500); // Wait for fade out
     }, 5000); // Change every 5 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [testimonials.length]);
+
+  React.useEffect(() => {
+    if (currentIndex >= testimonials.length) {
+      setCurrentIndex(0);
+    }
+  }, [currentIndex, testimonials.length]);
+
+  if (testimonials.length === 0) return null;
 
   return (
     <section className="py-24 bg-black">
@@ -34,7 +44,7 @@ const Testimonial: React.FC = () => {
             </blockquote>
 
             <div className="text-zinc-400">
-              <p className="font-black text-white uppercase tracking-widest text-sm">— {testimonials[currentIndex].name}, {testimonials[currentIndex].role}</p>
+              <p className="font-black text-white uppercase tracking-widest text-sm">- {testimonials[currentIndex].name}, {testimonials[currentIndex].role}</p>
             </div>
           </div>
 

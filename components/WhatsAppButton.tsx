@@ -1,9 +1,12 @@
 import React from 'react';
+import { useSiteContent } from '../context/SiteContext';
 
 const WhatsAppButton: React.FC = () => {
+    const { settings } = useSiteContent();
+
     return (
         <a
-            href="https://wa.me/8801944790363"
+            href={`https://wa.me/${settings.whatsappNumber}`}
             target="_blank"
             rel="noopener noreferrer"
             className="fixed bottom-8 right-8 z-[100] group"

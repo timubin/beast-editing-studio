@@ -1,21 +1,11 @@
 
 import React from 'react';
-import { Rocket, Check, Globe, Layout, Mail, Camera, Palette, Box } from 'lucide-react';
+import { Check } from 'lucide-react';
+import { useSiteContent } from '../context/SiteContext';
+import IconRenderer from './IconRenderer';
 
 const StartupPackage: React.FC = () => {
-  const items = [
-    { icon: Globe, text: "3-Page Professional Website" },
-    { icon: Layout, text: "Domain Registration" },
-    { icon: Mail, text: "Web Hosting (1 year)" },
-    { icon: Palette, text: "Business Email Setup" },
-    { icon: Box, text: "Custom Logo Design" },
-    { icon: Camera, text: "Brand Slogan Development" },
-    { icon: FileText, text: "5 Poster Designs (web & social media)" },
-    { icon: Video, text: "2x 30-Second Video Ads" }
-  ];
-
-  function FileText(props: any) { return <Layout {...props} /> }
-  function Video(props: any) { return <Camera {...props} /> }
+  const { startupPackage } = useSiteContent();
 
   return (
     <section className="py-24 bg-black">
@@ -25,19 +15,19 @@ const StartupPackage: React.FC = () => {
           
           <div className="text-center mb-16 relative z-10">
             <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-red-600/40">
-              <Rocket className="w-8 h-8 text-white" />
+              <IconRenderer name={startupPackage.icon} className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-5xl md:text-6xl font-black mb-6">Complete Startup Package</h2>
+            <h2 className="text-5xl md:text-6xl font-black mb-6">{startupPackage.title}</h2>
             <p className="text-zinc-400 max-w-2xl mx-auto text-lg font-medium">
-              Everything you need to launch your brand and make a powerful first impression
+              {startupPackage.description}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 max-w-4xl mx-auto relative z-10">
-            {items.map((item, index) => (
-              <div key={index} className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
+            {startupPackage.items.map((item) => (
+              <div key={item.id} className="flex items-center gap-4 bg-zinc-900/50 p-4 rounded-xl border border-zinc-800">
                 <div className="w-10 h-10 bg-zinc-950 rounded-lg flex items-center justify-center border border-red-900/30">
-                  <item.icon className="w-5 h-5 text-red-600" />
+                  <IconRenderer name={item.icon} className="w-5 h-5 text-red-600" />
                 </div>
                 <div className="flex-grow flex items-center justify-between">
                   <span className="text-sm font-bold text-zinc-100">{item.text}</span>
@@ -48,10 +38,10 @@ const StartupPackage: React.FC = () => {
           </div>
 
           <div className="text-center mt-16 relative z-10">
-            <button className="bg-red-600 hover:bg-red-700 text-white px-10 py-5 rounded-xl text-lg font-black uppercase tracking-widest transition-all shadow-xl shadow-red-600/30 active:scale-95 flex items-center gap-3 mx-auto">
-              <Rocket className="w-6 h-6" /> Get Started
-            </button>
-            <p className="mt-6 text-zinc-500 text-sm font-medium italic">Free consultation included</p>
+            <a href="#contact" className="bg-red-600 hover:bg-red-700 text-white px-10 py-5 rounded-xl text-lg font-black uppercase tracking-widest transition-all shadow-xl shadow-red-600/30 active:scale-95 inline-flex items-center gap-3 mx-auto">
+              <IconRenderer name={startupPackage.icon} className="w-6 h-6" /> {startupPackage.ctaLabel}
+            </a>
+            <p className="mt-6 text-zinc-500 text-sm font-medium italic">{startupPackage.note}</p>
           </div>
         </div>
       </div>

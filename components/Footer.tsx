@@ -2,11 +2,21 @@
 import React from 'react';
 import { Instagram, Twitter, Youtube, Linkedin, ArrowUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSiteContent } from '../context/SiteContext';
 
 const Footer: React.FC = () => {
+  const { settings } = useSiteContent();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const socialLinks = [
+    { url: settings.instagramUrl, label: 'Instagram', Icon: Instagram },
+    { url: settings.youtubeUrl, label: 'YouTube', Icon: Youtube },
+    { url: settings.linkedinUrl, label: 'LinkedIn', Icon: Linkedin },
+    { url: settings.twitterUrl, label: 'Twitter', Icon: Twitter },
+  ].filter(item => item.url);
 
   const footerLinks = [
     {
@@ -35,21 +45,17 @@ const Footer: React.FC = () => {
               </span>
             </div>
             <p className="text-zinc-500 text-sm leading-relaxed max-w-xs mb-8">
-              Premium visual content creation studio specializing in 3D, motion graphics, and commercial video production.
+              {settings.footerTagline}
             </p>
             <div className="space-y-2 mb-8">
-              <p className="text-zinc-400 text-sm hover:text-white transition-colors"><strong className="text-white">Email:</strong> beastediting24@gmail.com</p>
+              <p className="text-zinc-400 text-sm hover:text-white transition-colors"><strong className="text-white">Email:</strong> {settings.contactEmail}</p>
             </div>
             <div className="flex items-center gap-4">
-              <a href="https://www.instagram.com/beastediting.studio/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-600 hover:bg-zinc-800 transition-all">
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a href="https://www.youtube.com/@BeastEditingstudio" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-600 hover:bg-zinc-800 transition-all">
-                <Youtube className="w-5 h-5" />
-              </a>
-              <a href="https://www.linkedin.com/company/103732769/admin/dashboard/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-600 hover:bg-zinc-800 transition-all">
-                <Linkedin className="w-5 h-5" />
-              </a>
+              {socialLinks.map(({ url, label, Icon }) => (
+                <a key={label} href={url} target="_blank" rel="noopener noreferrer" aria-label={label} className="w-10 h-10 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-400 hover:text-red-600 hover:bg-zinc-800 transition-all">
+                  <Icon className="w-5 h-5" />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -77,9 +83,9 @@ const Footer: React.FC = () => {
 
         <div className="flex flex-col md:flex-row items-center justify-between pt-12 border-t border-zinc-900">
           <p className="text-zinc-600 text-xs mb-4 md:mb-0 flex items-center gap-2">
-            <span>© 2024 Beast Editing Studio. All rights reserved.</span>
+            <span>{settings.footerText}</span>
             <span className="w-1 h-1 bg-zinc-800 rounded-full"></span>
-            <span className="opacity-50">Based in Bangladesh</span>
+            <span className="opacity-50">Based in {settings.location}</span>
           </p>
           <div className="flex items-center gap-8 mb-4 md:mb-0">
             <Link to="/privacy" className="text-zinc-600 text-xs hover:text-white transition-colors">Privacy Policy</Link>

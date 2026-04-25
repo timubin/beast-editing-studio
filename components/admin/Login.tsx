@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
 import { auth } from '../../lib/firebase';
-import { signInAnonymously } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+
+const FALLBACK_ADMIN_EMAIL = 'admin@beast.com';
+const FALLBACK_ADMIN_PASSWORD = 'admin123';
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -17,18 +20,29 @@ const Login: React.FC = () => {
         setError('');
 
         try {
-            // Internal Credentials check
-            if (email.trim() === 'admin@beast.com' && password.trim() === 'admin123') {
-                // Perform Firebase login to satisfy Firestore rules
-                await signInAnonymously(auth);
+            const enteredEmail = email.trim();
+            const enteredPassword = password.trim();
+            const isFallbackAdmin = enteredEmail === FALLBACK_ADMIN_EMAIL && enteredPassword === FALLBACK_ADMIN_PASSWORD;
+
+            try {
+                await signInWithEmailAndPassword(auth, enteredEmail, enteredPassword);
                 localStorage.setItem('isAdmin', 'true');
+                localStorage.setItem('adminAuthMode', 'firebase');
                 navigate('/admin/dashboard');
-            } else {
-                setError('Invalid email or password');
+                return;
+            } catch (firebaseError) {
+                if (isFallbackAdmin) {
+                    localStorage.setItem('isAdmin', 'true');
+                    localStorage.setItem('adminAuthMode', 'local');
+                    navigate('/admin/dashboard');
+                    return;
+                }
+
+                throw firebaseError;
             }
         } catch (err: any) {
             console.error("Firebase Auth Error:", err);
-            setError('Login failed: ' + err.message);
+            setError('Invalid login. Use the Firebase admin account, or use admin@beast.com / admin123 for local admin mode.');
         } finally {
             setIsLoggingIn(false);
         }

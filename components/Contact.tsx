@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
+import { Mail, MapPin, Clock, Send } from 'lucide-react';
+import { useSiteContent } from '../context/SiteContext';
 
 const Contact: React.FC = () => {
+  const { contact, services, pricing } = useSiteContent();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,10 +22,10 @@ const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const whatsappNumber = "8801944790363"; // Your WhatsApp number
+    const whatsappNumber = contact.whatsappNumber;
 
     // Construct the message with proper formatting
-    const message = `*New Project Inquiry* 🚀
+    const message = `*New Project Inquiry*
 
 *Name:* ${formData.name}
 *Email:* ${formData.email}
@@ -47,10 +49,10 @@ _Sent from Beast Editing Website_`;
     <section id="contact" className="py-24 bg-black">
       <div className="container mx-auto px-6">
         <div className="text-center mb-20">
-          <p className="text-red-600 font-bold uppercase tracking-widest text-sm mb-4">GET IN TOUCH</p>
-          <h2 className="text-5xl md:text-7xl font-black mb-6">Let's Create Something <span className="text-red-600">Amazing</span></h2>
+          <p className="text-red-600 font-bold uppercase tracking-widest text-sm mb-4">{contact.eyebrow}</p>
+          <h2 className="text-5xl md:text-7xl font-black mb-6">{contact.title} <span className="text-red-600">{contact.highlightedTitle}</span></h2>
           <p className="text-zinc-500 max-w-2xl mx-auto text-lg font-medium">
-            Ready to bring your vision to life? Get in touch and let's discuss your project
+            {contact.description}
           </p>
         </div>
 
@@ -63,7 +65,7 @@ _Sent from Beast Editing Website_`;
               </div>
               <div>
                 <p className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-1">Email Us</p>
-                <a href="mailto:beastediting24@gmail.com" className="text-xl font-bold hover:text-red-600 transition-colors">beastediting24@gmail.com</a>
+                <a href={`mailto:${contact.email}`} className="text-xl font-bold hover:text-red-600 transition-colors">{contact.email}</a>
               </div>
             </div>
 
@@ -73,7 +75,7 @@ _Sent from Beast Editing Website_`;
               </div>
               <div>
                 <p className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-1">Location</p>
-                <p className="text-xl font-bold">Los Angeles, CA</p>
+                <p className="text-xl font-bold">{contact.location}</p>
               </div>
             </div>
 
@@ -83,15 +85,15 @@ _Sent from Beast Editing Website_`;
               </div>
               <div>
                 <p className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-1">Response Time</p>
-                <p className="text-xl font-bold">Within 24 hours</p>
+                <p className="text-xl font-bold">{contact.responseTime}</p>
               </div>
             </div>
 
             <div className="p-6 bg-red-600/5 border border-red-600/20 rounded-2xl flex items-start gap-4">
               <div className="w-2 h-2 bg-red-600 rounded-full mt-2 animate-pulse" />
               <p className="text-sm font-medium text-zinc-300">
-                <span className="text-red-600 font-bold block mb-1">Quick Response Guaranteed</span>
-                We typically respond within a few hours during business days.
+                <span className="text-red-600 font-bold block mb-1">{contact.noticeTitle}</span>
+                {contact.noticeText}
               </p>
             </div>
           </div>
@@ -146,13 +148,12 @@ _Sent from Beast Editing Website_`;
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-5 py-4 focus:border-red-600 outline-none text-sm appearance-none transition-all"
                 >
                   <option value="">Select a service...</option>
-                  <option value="3D Product Visualization">3D Product Visualization</option>
-                  <option value="Motion Graphics">Motion Graphics</option>
-                  <option value="Commercial Production">Commercial Production</option>
-                  <option value="Web Design">Web Design</option>
-                  <option value="Ai - Commercial Package (30s)">Ai - Commercial Package (30s)</option>
-                  <option value="Ai - Commercial Package (60s)">Ai - Commercial Package (60s)</option>
-                  <option value="Ai - Commercial Package (120s)">Ai - Commercial Package (120s)</option>
+                  {services.map(service => (
+                    <option key={service.id} value={service.title}>{service.title}</option>
+                  ))}
+                  {pricing.map(plan => (
+                    <option key={plan.id} value={`AI Commercial Package (${plan.name})`}>AI Commercial Package ({plan.name})</option>
+                  ))}
                   <option value="Startup Package">Startup Package</option>
                 </select>
               </div>

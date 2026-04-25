@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ExternalLink, Play } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useSiteContent } from '../context/SiteContext';
 
 const Portfolio: React.FC = () => {
@@ -70,9 +71,9 @@ const Portfolio: React.FC = () => {
         </div>
 
         <div className="text-center mt-16">
-          <button className="inline-flex items-center gap-2 border-b-2 border-zinc-800 hover:border-red-600 pb-1 text-sm font-black uppercase tracking-widest transition-all">
+          <Link to="/projects" className="inline-flex items-center gap-2 border-b-2 border-zinc-800 hover:border-red-600 pb-1 text-sm font-black uppercase tracking-widest transition-all">
             View All Projects <ExternalLink className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
       </div>
     </section>

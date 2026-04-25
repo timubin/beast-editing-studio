@@ -52,6 +52,11 @@ interface SiteSettings {
     facebookUrl: string;
     instagramUrl: string;
     twitterUrl: string;
+    youtubeUrl: string;
+    linkedinUrl: string;
+    whatsappNumber: string;
+    footerTagline: string;
+    location: string;
     footerText: string;
 }
 
@@ -109,6 +114,42 @@ interface DifferenceItem {
     icon: string;
 }
 
+interface ContactContent {
+    eyebrow: string;
+    title: string;
+    highlightedTitle: string;
+    description: string;
+    email: string;
+    location: string;
+    responseTime: string;
+    noticeTitle: string;
+    noticeText: string;
+    whatsappNumber: string;
+}
+
+interface WebServiceItem {
+    id: string;
+    title: string;
+    description: string;
+    tags: string[];
+    icon: string;
+}
+
+interface StartupPackageItem {
+    id: string;
+    icon: string;
+    text: string;
+}
+
+interface StartupPackageContent {
+    title: string;
+    description: string;
+    ctaLabel: string;
+    note: string;
+    icon: string;
+    items: StartupPackageItem[];
+}
+
 interface SiteContent {
     hero: HeroContent;
     blogPosts: BlogPost[];
@@ -122,9 +163,12 @@ interface SiteContent {
     // New Sections
     menu: MenuItem[];
     services: ServiceItem[];
+    webServices: WebServiceItem[];
     pricing: PricingPlan[];
     portfolio: PortfolioItem[];
     features: DifferenceItem[];
+    contact: ContactContent;
+    startupPackage: StartupPackageContent;
 
     updateHero: (content: HeroContent) => void;
     addBlogPost: (post: Omit<BlogPost, 'id'>) => void;
@@ -141,9 +185,12 @@ interface SiteContent {
     // New Update Functions
     updateMenu: (menu: MenuItem[]) => void;
     updateServices: (services: ServiceItem[]) => void;
+    updateWebServices: (services: WebServiceItem[]) => void;
     updatePricing: (pricing: PricingPlan[]) => void;
     updatePortfolio: (portfolio: PortfolioItem[]) => void;
     updateFeatures: (features: DifferenceItem[]) => void;
+    updateContact: (contact: ContactContent) => void;
+    updateStartupPackage: (startupPackage: StartupPackageContent) => void;
     uploadImage: (file: File, folder: string) => Promise<string>;
 }
 
@@ -217,10 +264,15 @@ const defaultContent: SiteContent = {
     ],
     settings: {
         siteName: "Beast Editing Studio",
-        contactEmail: "contact@beastediting.com",
-        facebookUrl: "https://facebook.com",
+        contactEmail: "beastediting24@gmail.com",
+        facebookUrl: "",
         instagramUrl: "https://instagram.com",
-        twitterUrl: "https://twitter.com",
+        twitterUrl: "",
+        youtubeUrl: "https://www.youtube.com/@BeastEditingstudio",
+        linkedinUrl: "https://www.linkedin.com/company/103732769/admin/dashboard/",
+        whatsappNumber: "8801944790363",
+        footerTagline: "Premium visual content creation studio specializing in 3D, motion graphics, and commercial video production.",
+        location: "Bangladesh",
         footerText: "© 2024 Beast Editing Studio. All rights reserved."
     },
     typography: {
@@ -259,6 +311,36 @@ const defaultContent: SiteContent = {
             title: "Commercial Video Production",
             description: "Engaging commercials that sell. We create compelling video content that converts viewers into customers.",
             items: ["TV Commercials", "Social Ads", "Product Videos", "Brand Films"]
+        }
+    ],
+    webServices: [
+        {
+            id: '1',
+            title: "One-Page Website / Portfolio",
+            description: "Perfect for creatives and professionals looking to showcase their work beautifully.",
+            tags: ["Responsive Design", "Modern UI/UX", "Fast Loading", "SEO Optimized"],
+            icon: 'FileText'
+        },
+        {
+            id: '2',
+            title: "E-Commerce Website",
+            description: "Up to 50 products with full shopping functionality and payment integration.",
+            tags: ["Product Management", "Secure Checkout", "Inventory Tracking", "Analytics Dashboard"],
+            icon: 'ShoppingCart'
+        },
+        {
+            id: '3',
+            title: "Multi-Page Website",
+            description: "Up to 10 pages with custom design tailored to your brand identity.",
+            tags: ["Custom Pages", "Blog Integration", "Contact Forms", "CMS Integration"],
+            icon: 'Layers'
+        },
+        {
+            id: '4',
+            title: "Professional Service Website",
+            description: "For doctors, lawyers, plumbers, and other service professionals.",
+            tags: ["Appointment Booking", "Service Showcases", "Testimonials", "Local SEO"],
+            icon: 'Briefcase'
         }
     ],
     pricing: [
@@ -372,6 +454,35 @@ const defaultContent: SiteContent = {
             icon: 'Heart'
         }
     ],
+    contact: {
+        eyebrow: "GET IN TOUCH",
+        title: "Let's Create Something",
+        highlightedTitle: "Amazing",
+        description: "Ready to bring your vision to life? Get in touch and let's discuss your project",
+        email: "beastediting24@gmail.com",
+        location: "Bangladesh",
+        responseTime: "Within 24 hours",
+        noticeTitle: "Quick Response Guaranteed",
+        noticeText: "We typically respond within a few hours during business days.",
+        whatsappNumber: "8801944790363"
+    },
+    startupPackage: {
+        title: "Complete Startup Package",
+        description: "Everything you need to launch your brand and make a powerful first impression",
+        ctaLabel: "Get Started",
+        note: "Free consultation included",
+        icon: "Rocket",
+        items: [
+            { id: '1', icon: 'Globe', text: "3-Page Professional Website" },
+            { id: '2', icon: 'Layout', text: "Domain Registration" },
+            { id: '3', icon: 'Mail', text: "Web Hosting (1 year)" },
+            { id: '4', icon: 'Palette', text: "Business Email Setup" },
+            { id: '5', icon: 'Box', text: "Custom Logo Design" },
+            { id: '6', icon: 'Camera', text: "Brand Slogan Development" },
+            { id: '7', icon: 'FileText', text: "5 Poster Designs (web & social media)" },
+            { id: '8', icon: 'Video', text: "2x 30-Second Video Ads" }
+        ]
+    },
 
     updateHero: () => { },
     addBlogPost: () => { },
@@ -387,51 +498,121 @@ const defaultContent: SiteContent = {
 
     updateMenu: () => { },
     updateServices: () => { },
+    updateWebServices: () => { },
     updatePricing: () => { },
     updatePortfolio: () => { },
     updateFeatures: () => { },
+    updateContact: () => { },
+    updateStartupPackage: () => { },
     uploadImage: async () => ''
 };
 
 const SiteContext = createContext<SiteContent>(defaultContent);
 
+const STORAGE_KEY = 'beast_site_content';
+
+const readStoredContent = (): Partial<SiteContent> => {
+    if (typeof window === 'undefined') return {};
+
+    try {
+        const saved = window.localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : {};
+    } catch (error) {
+        console.error("Could not read saved site content:", error);
+        return {};
+    }
+};
+
+const mergeWithDefaults = (content: Partial<SiteContent>): SiteContent => ({
+    ...defaultContent,
+    ...content,
+    hero: { ...defaultContent.hero, ...content.hero },
+    about: { ...defaultContent.about, ...content.about },
+    settings: { ...defaultContent.settings, ...content.settings },
+    typography: { ...defaultContent.typography, ...content.typography },
+    contact: { ...defaultContent.contact, ...content.contact },
+    startupPackage: {
+        ...defaultContent.startupPackage,
+        ...content.startupPackage,
+        items: content.startupPackage?.items || defaultContent.startupPackage.items
+    },
+    blogPosts: content.blogPosts || defaultContent.blogPosts,
+    stats: content.stats || defaultContent.stats,
+    testimonials: content.testimonials || defaultContent.testimonials,
+    customSections: content.customSections || defaultContent.customSections,
+    menu: content.menu || defaultContent.menu,
+    services: content.services || defaultContent.services,
+    webServices: content.webServices || defaultContent.webServices,
+    pricing: content.pricing || defaultContent.pricing,
+    portfolio: content.portfolio || defaultContent.portfolio,
+    features: content.features || defaultContent.features
+});
+
+const writeStoredField = (field: keyof SiteContent, data: any) => {
+    if (typeof window === 'undefined') return;
+
+    try {
+        const current = mergeWithDefaults(readStoredContent());
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, [field]: data }));
+    } catch (error) {
+        console.error("Could not save site content locally:", error);
+    }
+};
+
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [hero, setHero] = useState<HeroContent>(defaultContent.hero);
-    const [blogPosts, setBlogPosts] = useState<BlogPost[]>(defaultContent.blogPosts);
-    const [about, setAbout] = useState<AboutContent>(defaultContent.about);
-    const [stats, setStats] = useState<StatItem[]>(defaultContent.stats);
-    const [testimonials, setTestimonials] = useState<TestimonialItem[]>(defaultContent.testimonials);
-    const [settings, setSettings] = useState<SiteSettings>(defaultContent.settings);
-    const [typography, setTypography] = useState<SiteTypography>(defaultContent.typography);
-    const [customSections, setCustomSections] = useState<CustomSection[]>(defaultContent.customSections);
+    const initialContent = React.useMemo(() => mergeWithDefaults(readStoredContent()), []);
 
-    const [menu, setMenu] = useState<MenuItem[]>(defaultContent.menu);
-    const [services, setServices] = useState<ServiceItem[]>(defaultContent.services);
-    const [pricing, setPricing] = useState<PricingPlan[]>(defaultContent.pricing);
-    const [portfolio, setPortfolio] = useState<PortfolioItem[]>(defaultContent.portfolio);
-    const [features, setFeatures] = useState<DifferenceItem[]>(defaultContent.features);
+    const [hero, setHero] = useState<HeroContent>(initialContent.hero);
+    const [blogPosts, setBlogPosts] = useState<BlogPost[]>(initialContent.blogPosts);
+    const [about, setAbout] = useState<AboutContent>(initialContent.about);
+    const [stats, setStats] = useState<StatItem[]>(initialContent.stats);
+    const [testimonials, setTestimonials] = useState<TestimonialItem[]>(initialContent.testimonials);
+    const [settings, setSettings] = useState<SiteSettings>(initialContent.settings);
+    const [typography, setTypography] = useState<SiteTypography>(initialContent.typography);
+    const [customSections, setCustomSections] = useState<CustomSection[]>(initialContent.customSections);
 
-    // Load from Firebase
+    const [menu, setMenu] = useState<MenuItem[]>(initialContent.menu);
+    const [services, setServices] = useState<ServiceItem[]>(initialContent.services);
+    const [webServices, setWebServices] = useState<WebServiceItem[]>(initialContent.webServices);
+    const [pricing, setPricing] = useState<PricingPlan[]>(initialContent.pricing);
+    const [portfolio, setPortfolio] = useState<PortfolioItem[]>(initialContent.portfolio);
+    const [features, setFeatures] = useState<DifferenceItem[]>(initialContent.features);
+    const [contact, setContact] = useState<ContactContent>(initialContent.contact);
+    const [startupPackage, setStartupPackage] = useState<StartupPackageContent>(initialContent.startupPackage);
+
+    const applyContent = (content: Partial<SiteContent>) => {
+        const merged = mergeWithDefaults(content);
+        setHero(merged.hero);
+        setBlogPosts(merged.blogPosts);
+        setAbout(merged.about);
+        setStats(merged.stats);
+        setTestimonials(merged.testimonials);
+        setSettings(merged.settings);
+        setTypography(merged.typography);
+        setCustomSections(merged.customSections);
+        setMenu(merged.menu);
+        setServices(merged.services);
+        setWebServices(merged.webServices);
+        setPricing(merged.pricing);
+        setPortfolio(merged.portfolio);
+        setFeatures(merged.features);
+        setContact(merged.contact);
+        setStartupPackage(merged.startupPackage);
+    };
+
+    // Load from Firebase. If Firebase is not enabled, localStorage keeps the admin usable.
     useEffect(() => {
-        const unsubscribe = onSnapshot(doc(db, "site-content", "main"), (snapshot) => {
+        const contentRef = doc(db, "site-content", "main");
+        const unsubscribe = onSnapshot(contentRef, (snapshot) => {
             if (snapshot.exists()) {
-                const data = snapshot.data() as Partial<SiteContent>;
-                if (data.hero) setHero(data.hero);
-                if (data.blogPosts) setBlogPosts(data.blogPosts);
-                if (data.about) setAbout(data.about);
-                if (data.stats) setStats(data.stats);
-                if (data.testimonials) setTestimonials(data.testimonials);
-                if (data.settings) setSettings(data.settings);
-                if (data.typography) setTypography(data.typography);
-                if (data.customSections) setCustomSections(data.customSections);
-                if (data.menu) setMenu(data.menu);
-                if (data.services) setServices(data.services);
-                if (data.pricing) setPricing(data.pricing);
-                if (data.portfolio) setPortfolio(data.portfolio);
-                if (data.features) setFeatures(data.features);
+                const remoteContent = mergeWithDefaults(snapshot.data() as Partial<SiteContent>);
+                if (typeof window !== 'undefined') {
+                    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteContent));
+                }
+                applyContent(remoteContent);
             } else {
                 // Initialize DB if empty
-                setDoc(snapshot.ref, {
+                setDoc(contentRef, {
                     hero: defaultContent.hero,
                     blogPosts: defaultContent.blogPosts,
                     about: defaultContent.about,
@@ -442,31 +623,31 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     customSections: defaultContent.customSections,
                     menu: defaultContent.menu,
                     services: defaultContent.services,
+                    webServices: defaultContent.webServices,
                     pricing: defaultContent.pricing,
                     portfolio: defaultContent.portfolio,
-                    features: defaultContent.features
+                    features: defaultContent.features,
+                    contact: defaultContent.contact,
+                    startupPackage: defaultContent.startupPackage
                 }, { merge: true });
             }
         }, (error) => {
             console.error("Detail load error:", error);
-            // Fallback to localStorage if Firebase fails (e.g. invalid config)
-            const loadLocal = (key: string, setter: (val: any) => void) => {
-                const saved = localStorage.getItem(key);
-                if (saved && saved !== "undefined" && saved !== "null") try { setter(JSON.parse(saved)); } catch (e) { }
-            };
-            loadLocal('site_hero', setHero);
+            applyContent(readStoredContent());
         });
 
         return () => unsubscribe();
     }, []);
 
     // Database Updaters
-    const saveToDb = async (field: string, data: any) => {
+    const saveToDb = async (field: keyof SiteContent, data: any) => {
+        writeStoredField(field, data);
+
         try {
             await setDoc(doc(db, "site-content", "main"), { [field]: data }, { merge: true });
         } catch (e) {
             console.error("Error saving to DB:", e);
-            alert("Error saving: Check your internet connection or admin privileges.");
+            alert("Saved in this browser. For live cross-device sync, enable Firebase Authentication and Firestore for this project.");
         }
     };
 
@@ -506,27 +687,40 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updateMenu = (items: MenuItem[]) => { setMenu(items); saveToDb('menu', items); };
     const updateServices = (items: ServiceItem[]) => { setServices(items); saveToDb('services', items); };
+    const updateWebServices = (items: WebServiceItem[]) => { setWebServices(items); saveToDb('webServices', items); };
     const updatePricing = (items: PricingPlan[]) => { setPricing(items); saveToDb('pricing', items); };
     const updatePortfolio = (items: PortfolioItem[]) => { setPortfolio(items); saveToDb('portfolio', items); };
     const updateFeatures = (items: DifferenceItem[]) => { setFeatures(items); saveToDb('features', items); };
+    const updateContact = (content: ContactContent) => { setContact(content); saveToDb('contact', content); };
+    const updateStartupPackage = (content: StartupPackageContent) => { setStartupPackage(content); saveToDb('startupPackage', content); };
 
     const uploadImage = async (file: File, folder: string): Promise<string> => {
-        const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(fileRef, file);
-        return await getDownloadURL(snapshot.ref);
+        try {
+            const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(fileRef, file);
+            return await getDownloadURL(snapshot.ref);
+        } catch (error) {
+            console.error("Firebase upload failed, using browser-local image:", error);
+            return await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result));
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
     };
 
     // Memoize the context value to prevent unnecessary re-renders of consumers
     const value = React.useMemo(() => ({
         hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
-        menu, services, pricing, portfolio, features,
+        menu, services, webServices, pricing, portfolio, features, contact, startupPackage,
         updateHero, addBlogPost, deleteBlogPost, updateAbout, updateStats, updateTestimonials, updateSettings, updateTypography,
         addCustomSection, updateCustomSection, deleteCustomSection,
-        updateMenu, updateServices, updatePricing, updatePortfolio, updateFeatures,
+        updateMenu, updateServices, updateWebServices, updatePricing, updatePortfolio, updateFeatures, updateContact, updateStartupPackage,
         uploadImage
     }), [
         hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
-        menu, services, pricing, portfolio, features
+        menu, services, webServices, pricing, portfolio, features, contact, startupPackage
     ]);
 
     return (

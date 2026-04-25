@@ -41,7 +41,11 @@ const Pricing: React.FC = () => {
                 </div>
                 <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">{plan.duration}</p>
                 <h3 className="text-2xl font-black mb-4">{plan.name}</h3>
-                {/* Price hidden as per request */}
+                {plan.price && (
+                  <div className="text-4xl font-black text-white">
+                    <span className="text-lg text-zinc-500 align-top">$</span>{plan.price}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4 mb-10 flex-grow">
