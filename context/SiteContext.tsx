@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db, storage } from '../lib/firebase';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { deletePublicUpload, hasGitHubToken, saveSiteContentToGitHub, uploadFileToGitHub } from '../lib/githubStorage';
 
 // Define types for our content
 interface HeroContent {
@@ -192,6 +193,7 @@ interface SiteContent {
     updateContact: (contact: ContactContent) => void;
     updateStartupPackage: (startupPackage: StartupPackageContent) => void;
     uploadImage: (file: File, folder: string) => Promise<string>;
+    deleteUploadedFile: (url: string) => Promise<void>;
 }
 
 const defaultContent: SiteContent = {
@@ -504,7 +506,8 @@ const defaultContent: SiteContent = {
     updateFeatures: () => { },
     updateContact: () => { },
     updateStartupPackage: () => { },
-    uploadImage: async () => ''
+    uploadImage: async () => '',
+    deleteUploadedFile: async () => { }
 };
 
 const SiteContext = createContext<SiteContent>(defaultContent);
@@ -559,6 +562,16 @@ const writeStoredField = (field: keyof SiteContent, data: any) => {
     }
 };
 
+const writeStoredContent = (content: Partial<SiteContent>) => {
+    if (typeof window === 'undefined') return;
+
+    try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(mergeWithDefaults(content)));
+    } catch (error) {
+        console.error("Could not save site content locally:", error);
+    }
+};
+
 export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const initialContent = React.useMemo(() => mergeWithDefaults(readStoredContent()), []);
 
@@ -599,6 +612,46 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setContact(merged.contact);
         setStartupPackage(merged.startupPackage);
     };
+
+    const getContentSnapshot = (overrides: Partial<SiteContent> = {}) => ({
+        hero,
+        blogPosts,
+        about,
+        stats,
+        testimonials,
+        settings,
+        typography,
+        customSections,
+        menu,
+        services,
+        webServices,
+        pricing,
+        portfolio,
+        features,
+        contact,
+        startupPackage,
+        ...overrides
+    });
+
+    useEffect(() => {
+        let isCancelled = false;
+
+        fetch(`/site-content.json?v=${Date.now()}`, { cache: 'no-store' })
+            .then(response => response.ok ? response.json() : null)
+            .then((content) => {
+                if (!isCancelled && content) {
+                    writeStoredContent(content);
+                    applyContent(content);
+                }
+            })
+            .catch((error) => {
+                console.info("No GitHub content file loaded yet:", error);
+            });
+
+        return () => {
+            isCancelled = true;
+        };
+    }, []);
 
     // Load from Firebase. If Firebase is not enabled, localStorage keeps the admin usable.
     useEffect(() => {
@@ -641,13 +694,22 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Database Updaters
     const saveToDb = async (field: keyof SiteContent, data: any) => {
-        writeStoredField(field, data);
+        const contentSnapshot = getContentSnapshot({ [field]: data });
+        writeStoredContent(contentSnapshot);
 
         try {
             await setDoc(doc(db, "site-content", "main"), { [field]: data }, { merge: true });
         } catch (e) {
             console.error("Error saving to DB:", e);
-            alert("Saved in this browser. For live cross-device sync, enable Firebase Authentication and Firestore for this project.");
+        }
+
+        if (hasGitHubToken()) {
+            try {
+                await saveSiteContentToGitHub(contentSnapshot);
+            } catch (error: any) {
+                console.error("Error saving to GitHub:", error);
+                alert(`Saved in this browser, but GitHub live sync failed: ${error.message}`);
+            }
         }
     };
 
@@ -695,6 +757,10 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updateStartupPackage = (content: StartupPackageContent) => { setStartupPackage(content); saveToDb('startupPackage', content); };
 
     const uploadImage = async (file: File, folder: string): Promise<string> => {
+        if (hasGitHubToken()) {
+            return await uploadFileToGitHub(file, folder);
+        }
+
         try {
             const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
             const snapshot = await uploadBytes(fileRef, file);
@@ -710,6 +776,11 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const deleteUploadedFile = async (url: string): Promise<void> => {
+        if (!url || !hasGitHubToken()) return;
+        await deletePublicUpload(url);
+    };
+
     // Memoize the context value to prevent unnecessary re-renders of consumers
     const value = React.useMemo(() => ({
         hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
@@ -717,7 +788,7 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateHero, addBlogPost, deleteBlogPost, updateAbout, updateStats, updateTestimonials, updateSettings, updateTypography,
         addCustomSection, updateCustomSection, deleteCustomSection,
         updateMenu, updateServices, updateWebServices, updatePricing, updatePortfolio, updateFeatures, updateContact, updateStartupPackage,
-        uploadImage
+        uploadImage, deleteUploadedFile
     }), [
         hero, blogPosts, about, stats, testimonials, settings, typography, customSections,
         menu, services, webServices, pricing, portfolio, features, contact, startupPackage

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useSiteContent } from '../../context/SiteContext';
 import { LayoutDashboard, Type, FileText, Settings, LogOut, Save, Trash2, Plus, Users, BarChart, MessageSquare, Code, List, Briefcase, CreditCard, Star, Menu as MenuIcon, Edit3, Upload, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { defaultGitHubConfig, getGitHubConfig, saveGitHubConfig } from '../../lib/githubStorage';
 
 const Dashboard: React.FC = () => {
     const {
@@ -22,7 +23,7 @@ const Dashboard: React.FC = () => {
         features, updateFeatures,
         contact, updateContact,
         startupPackage, updateStartupPackage,
-        uploadImage
+        uploadImage, deleteUploadedFile
     } = useSiteContent();
 
     const [activeTab, setActiveTab] = useState('hero');
@@ -46,6 +47,7 @@ const Dashboard: React.FC = () => {
         location: '',
         footerText: ''
     });
+    const [githubForm, setGithubForm] = useState(getGitHubConfig());
     const [typographyForm, setTypographyForm] = useState(typography || {
         fontFamily: 'Inter',
         headingFont: 'Inter'
@@ -90,7 +92,7 @@ const Dashboard: React.FC = () => {
             alert('Image uploaded successfully!');
         } catch (error) {
             console.error('Upload error:', error);
-            alert('Error uploading image. Make sure Firebase Storage is configured correctly.');
+            alert('Error uploading image. Check your GitHub upload token or storage settings.');
         } finally {
             setUploading(null);
         }
@@ -169,6 +171,12 @@ const Dashboard: React.FC = () => {
         alert('Settings Updated!');
     };
 
+    const handleGitHubSave = () => {
+        saveGitHubConfig(githubForm);
+        setGithubForm(getGitHubConfig());
+        alert('GitHub upload settings saved for this browser session.');
+    };
+
     const handleTypographySave = () => {
         updateTypography(typographyForm);
         alert('Typography Updated!');
@@ -197,6 +205,46 @@ const Dashboard: React.FC = () => {
     const handlePortfolioSave = () => {
         updatePortfolio(portfolioForm);
         alert('Portfolio Updated!');
+    };
+
+    const handleDeletePortfolioProject = async (index: number) => {
+        if (!window.confirm("Are you sure?")) return;
+
+        const item = portfolioForm[index];
+        try {
+            setUploading(`portfolio-delete-${index}`);
+            await deleteUploadedFile(item.image);
+        } catch (error) {
+            console.error('Delete upload error:', error);
+            alert('Project removed from the panel, but the uploaded file could not be deleted from GitHub.');
+        } finally {
+            setUploading(null);
+        }
+
+        const nextPortfolio = portfolioForm.filter((_, itemIndex) => itemIndex !== index);
+        setPortfolioForm(nextPortfolio);
+        updatePortfolio(nextPortfolio);
+    };
+
+    const handleDeletePortfolioImage = async (index: number) => {
+        const item = portfolioForm[index];
+        if (!item.image || !window.confirm("Delete this image file?")) return;
+
+        try {
+            setUploading(`portfolio-delete-image-${index}`);
+            await deleteUploadedFile(item.image);
+            const nextPortfolio = portfolioForm.map((project, itemIndex) => (
+                itemIndex === index ? { ...project, image: '' } : project
+            ));
+            setPortfolioForm(nextPortfolio);
+            updatePortfolio(nextPortfolio);
+            alert('Image removed.');
+        } catch (error: any) {
+            console.error('Delete image error:', error);
+            alert(`Image delete failed: ${error.message}`);
+        } finally {
+            setUploading(null);
+        }
     };
 
     const handleFeaturesSave = () => {
@@ -663,8 +711,8 @@ const Dashboard: React.FC = () => {
                             {portfolioForm.map((item, index) => (
                                 <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4 relative">
                                     <div className="absolute top-4 right-4 z-10">
-                                        <button onClick={() => deleteItemFromList(portfolioForm, setPortfolioForm, index)} className="p-2 bg-black/50 rounded-full text-zinc-500 hover:text-red-500">
-                                            <Trash2 className="w-5 h-5" />
+                                        <button onClick={() => handleDeletePortfolioProject(index)} className="p-2 bg-black/50 rounded-full text-zinc-500 hover:text-red-500">
+                                            {uploading === `portfolio-delete-${index}` ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
                                         </button>
                                     </div>
                                     <input
@@ -697,10 +745,21 @@ const Dashboard: React.FC = () => {
                                                         accept="image/*"
                                                         onChange={(e) => {
                                                             const file = e.target.files?.[0];
-                                                            if (file) handleFileUpload(file, 'portfolio', (url) => updateListItem(portfolioForm, setPortfolioForm, index, 'image', url));
+                                                            if (file) handleFileUpload(file, 'portfolio', (url) => {
+                                                                const nextPortfolio = portfolioForm.map((project, itemIndex) => (
+                                                                    itemIndex === index ? { ...project, image: url } : project
+                                                                ));
+                                                                setPortfolioForm(nextPortfolio);
+                                                                updatePortfolio(nextPortfolio);
+                                                            });
                                                         }}
                                                     />
                                                 </label>
+                                                {item.image && (
+                                                    <button onClick={() => handleDeletePortfolioImage(index)} className="px-3 py-2 bg-zinc-800 hover:bg-red-600 rounded-lg text-xs font-bold transition-all">
+                                                        {uploading === `portfolio-delete-image-${index}` ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1312,6 +1371,80 @@ const Dashboard: React.FC = () => {
                                         onChange={(e) => setSettingsForm({ ...settingsForm, footerText: e.target.value })}
                                         className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
                                     />
+                                </div>
+
+                                <div className="mt-10 pt-8 border-t border-zinc-800 space-y-6">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div>
+                                            <h4 className="text-lg font-bold text-zinc-100">GitHub Live Upload</h4>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setGithubForm({ ...defaultGitHubConfig, token: githubForm.token })}
+                                            className="px-4 py-2 rounded-lg text-sm font-bold text-zinc-400 hover:bg-zinc-800 transition-all"
+                                        >
+                                            Reset Repo
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Owner</label>
+                                            <input
+                                                value={githubForm.owner}
+                                                onChange={(e) => setGithubForm({ ...githubForm, owner: e.target.value })}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Repo</label>
+                                            <input
+                                                value={githubForm.repo}
+                                                onChange={(e) => setGithubForm({ ...githubForm, repo: e.target.value })}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Branch</label>
+                                            <input
+                                                value={githubForm.branch}
+                                                onChange={(e) => setGithubForm({ ...githubForm, branch: e.target.value })}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Content JSON Path</label>
+                                            <input
+                                                value={githubForm.contentPath}
+                                                onChange={(e) => setGithubForm({ ...githubForm, contentPath: e.target.value })}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">Upload Folder</label>
+                                            <input
+                                                value={githubForm.uploadRoot}
+                                                onChange={(e) => setGithubForm({ ...githubForm, uploadRoot: e.target.value })}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-zinc-500 uppercase mb-3">GitHub Token</label>
+                                        <input
+                                            type="password"
+                                            value={githubForm.token}
+                                            onChange={(e) => setGithubForm({ ...githubForm, token: e.target.value })}
+                                            placeholder="Fine-grained token with Contents read/write"
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button type="button" onClick={handleGitHubSave} className="bg-white hover:bg-zinc-200 text-black px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all">
+                                            <Save className="w-5 h-5" /> Save GitHub Upload
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div className="mt-8 flex justify-end">
