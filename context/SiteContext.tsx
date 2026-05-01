@@ -759,53 +759,43 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updateStartupPackage = (content: StartupPackageContent) => { setStartupPackage(content); saveToDb('startupPackage', content); };
 
     const uploadImage = async (file: File, folder: string): Promise<string> => {
-        if (hasGitHubToken()) {
-            return await uploadFileToGitHub(file, folder);
-        }
-
         try {
-            const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-            const snapshot = await uploadBytes(fileRef, file);
-            return await getDownloadURL(snapshot.ref);
-        } catch (error) {
-            console.error("Firebase upload failed:", error);
-            
-            try {
-                // Fallback to free anonymous image hosting (freeimage.host)
+            // Priority 1: If user provided ImgBB API key
+            if (settings.imgbbApiKey) {
                 const formData = new FormData();
-                formData.append('source', file);
-                formData.append('type', 'file');
-                formData.append('action', 'upload');
-                formData.append('key', '6d207e02198a847aa98d0a2a901485a5'); // Public freeimage.host API key
-                
-                // If user provided ImgBB key, we can try that instead, but freeimage.host is default
-                const uploadUrl = settings.imgbbApiKey 
-                    ? `https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`
-                    : `https://freeimage.host/api/1/upload`;
-                
-                if (settings.imgbbApiKey) {
-                    formData.delete('source');
-                    formData.delete('type');
-                    formData.delete('action');
-                    formData.delete('key');
-                    formData.append('image', file);
-                }
-
-                const res = await fetch(uploadUrl, {
+                formData.append('image', file);
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`, {
                     method: 'POST',
                     body: formData
                 });
-                
                 const data = await res.json();
-                if (data.status_code === 200 || data.success) {
-                    return data.image?.url || data.data?.url;
-                } else {
-                    throw new Error(data.error?.message || "Upload failed");
+                if (data.success) {
+                    return data.data.url;
                 }
-            } catch (uploadError: any) {
-                alert("Image Upload Failed! Please check your internet connection and try again.");
-                throw uploadError;
             }
+            
+            // Priority 2: Fallback to free anonymous image hosting (freeimage.host)
+            const formData = new FormData();
+            formData.append('source', file);
+            formData.append('type', 'file');
+            formData.append('action', 'upload');
+            formData.append('key', '6d207e02198a847aa98d0a2a901485a5'); // Public freeimage.host API key
+
+            const res = await fetch('https://freeimage.host/api/1/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await res.json();
+            if (data.status_code === 200 || data.success) {
+                return data.image?.url || data.data?.url;
+            } else {
+                throw new Error(data.error?.message || "Upload failed");
+            }
+        } catch (uploadError: any) {
+            console.error("Upload error:", uploadError);
+            alert("Image Upload Failed! Please check your internet connection or image size and try again.");
+            throw uploadError;
         }
     };
 
