@@ -770,27 +770,41 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (error) {
             console.error("Firebase upload failed:", error);
             
-            if (settings.imgbbApiKey) {
-                try {
-                    const formData = new FormData();
+            try {
+                // Fallback to free anonymous image hosting (freeimage.host)
+                const formData = new FormData();
+                formData.append('source', file);
+                formData.append('type', 'file');
+                formData.append('action', 'upload');
+                formData.append('key', '6d207e02198a847aa98d0a2a901485a5'); // Public freeimage.host API key
+                
+                // If user provided ImgBB key, we can try that instead, but freeimage.host is default
+                const uploadUrl = settings.imgbbApiKey 
+                    ? `https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`
+                    : `https://freeimage.host/api/1/upload`;
+                
+                if (settings.imgbbApiKey) {
+                    formData.delete('source');
+                    formData.delete('type');
+                    formData.delete('action');
+                    formData.delete('key');
                     formData.append('image', file);
-                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        return data.data.url;
-                    } else {
-                        throw new Error(data.error?.message || "ImgBB upload failed");
-                    }
-                } catch (imgbbError: any) {
-                    alert("Image Upload Failed! " + imgbbError.message);
-                    throw imgbbError;
                 }
-            } else {
-                alert("Image Upload Failed! Firebase Storage CORS/Rules blocked the upload. Please go to Settings and enter an ImgBB API Key (free from api.imgbb.com) to enable image uploads.");
-                throw new Error("No image upload method available.");
+
+                const res = await fetch(uploadUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if (data.status_code === 200 || data.success) {
+                    return data.image?.url || data.data?.url;
+                } else {
+                    throw new Error(data.error?.message || "Upload failed");
+                }
+            } catch (uploadError: any) {
+                alert("Image Upload Failed! Please check your internet connection and try again.");
+                throw uploadError;
             }
         }
     };
