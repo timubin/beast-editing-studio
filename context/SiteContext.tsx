@@ -788,19 +788,23 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
             
-            // Priority 2: Proxy via Vercel Serverless Function to bypass CORS and use freeimage.host
-            const base64 = await fileToBase64(file);
-            const res = await fetch('/api/upload', {
+            // Priority 2: Upload directly to Imgur (supports CORS, up to 20MB)
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const res = await fetch('https://api.imgur.com/3/image', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ base64 })
+                headers: {
+                    'Authorization': 'Client-ID 546c25a59c58ad7'
+                },
+                body: formData
             });
             
             const data = await res.json();
-            if (res.ok && data.url) {
-                return data.url;
+            if (res.ok && data.success) {
+                return data.data.link;
             } else {
-                throw new Error(data.error || "Upload failed");
+                throw new Error(data.data?.error || "Upload failed");
             }
         } catch (uploadError: any) {
             console.error("Upload error:", uploadError);
