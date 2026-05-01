@@ -1309,6 +1309,18 @@ const Dashboard: React.FC = () => {
                                             className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
                                         />
                                     </div>
+                                    <div className="md:col-span-2 mt-4 p-4 border border-zinc-800 rounded-xl bg-zinc-950/50">
+                                        <label className="block text-xs font-bold text-red-500 uppercase mb-3 flex items-center gap-2">
+                                            <Upload className="w-4 h-4" /> Image Upload API Key (ImgBB)
+                                        </label>
+                                        <input
+                                            value={settingsForm.imgbbApiKey || ''}
+                                            onChange={(e) => setSettingsForm({ ...settingsForm, imgbbApiKey: e.target.value })}
+                                            placeholder="Paste your free API key from api.imgbb.com here to enable image uploads"
+                                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 focus:border-red-600 outline-none transition-all"
+                                        />
+                                        <p className="text-xs text-zinc-500 mt-2">Required for changing images on the website. Get a free key from <a href="https://api.imgbb.com/" target="_blank" rel="noreferrer" className="text-blue-500 hover:underline">api.imgbb.com</a></p>
+                                    </div>
                                 </div>
 
                                 <h4 className="text-lg font-bold mt-8 mb-4 text-zinc-400">Social Media Links</h4>

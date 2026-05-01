@@ -59,6 +59,7 @@ interface SiteSettings {
     footerTagline: string;
     location: string;
     footerText: string;
+    imgbbApiKey?: string;
 }
 
 interface SiteTypography {
@@ -275,7 +276,8 @@ const defaultContent: SiteContent = {
         whatsappNumber: "8801944790363",
         footerTagline: "Premium visual content creation studio specializing in 3D, motion graphics, and commercial video production.",
         location: "Bangladesh",
-        footerText: "© 2024 Beast Editing Studio. All rights reserved."
+        footerText: "© 2024 Beast Editing Studio. All rights reserved.",
+        imgbbApiKey: ""
     },
     typography: {
         fontFamily: "Inter",
@@ -766,13 +768,30 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const snapshot = await uploadBytes(fileRef, file);
             return await getDownloadURL(snapshot.ref);
         } catch (error) {
-            console.error("Firebase upload failed, using browser-local image:", error);
-            return await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(String(reader.result));
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
+            console.error("Firebase upload failed:", error);
+            
+            if (settings.imgbbApiKey) {
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${settings.imgbbApiKey}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        return data.data.url;
+                    } else {
+                        throw new Error(data.error?.message || "ImgBB upload failed");
+                    }
+                } catch (imgbbError: any) {
+                    alert("Image Upload Failed! " + imgbbError.message);
+                    throw imgbbError;
+                }
+            } else {
+                alert("Image Upload Failed! Firebase Storage CORS/Rules blocked the upload. Please go to Settings and enter an ImgBB API Key (free from api.imgbb.com) to enable image uploads.");
+                throw new Error("No image upload method available.");
+            }
         }
     };
 
