@@ -758,9 +758,23 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const updateContact = (content: ContactContent) => { setContact(content); saveToDb('contact', content); };
     const updateStartupPackage = (content: StartupPackageContent) => { setStartupPackage(content); saveToDb('startupPackage', content); };
 
+    const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const result = reader.result as string;
+                // Remove the "data:image/png;base64," part
+                const base64 = result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = error => reject(error);
+        });
+    };
+
     const uploadImage = async (file: File, folder: string): Promise<string> => {
         try {
-            // Priority 1: If user provided ImgBB API key
+            // Priority 1: If user provided ImgBB API key, upload directly from browser
             if (settings.imgbbApiKey) {
                 const formData = new FormData();
                 formData.append('image', file);
@@ -774,23 +788,19 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 }
             }
             
-            // Priority 2: Fallback to free anonymous image hosting (freeimage.host)
-            const formData = new FormData();
-            formData.append('source', file);
-            formData.append('type', 'file');
-            formData.append('action', 'upload');
-            formData.append('key', '6d207e02198a847aa98d0a2a901485a5'); // Public freeimage.host API key
-
-            const res = await fetch('https://freeimage.host/api/1/upload', {
+            // Priority 2: Proxy via Vercel Serverless Function to bypass CORS and use freeimage.host
+            const base64 = await fileToBase64(file);
+            const res = await fetch('/api/upload', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ base64 })
             });
             
             const data = await res.json();
-            if (data.status_code === 200 || data.success) {
-                return data.image?.url || data.data?.url;
+            if (res.ok && data.url) {
+                return data.url;
             } else {
-                throw new Error(data.error?.message || "Upload failed");
+                throw new Error(data.error || "Upload failed");
             }
         } catch (uploadError: any) {
             console.error("Upload error:", uploadError);
