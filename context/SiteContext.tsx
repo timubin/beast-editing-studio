@@ -201,8 +201,8 @@ const defaultContent: SiteContent = {
     hero: {
         titleLine1: "BEAST EDITING",
         titleLine2: "STUDIO",
-        subHeadlineLine1: "WE CREATE VISUALS",
-        subHeadlineLine2: "THAT ROAR",
+        subHeadlineLine1: "HIGH-IMPACT VISUALS",
+        subHeadlineLine2: "BUILT TO WIN",
         videoUrl: "https://www.youtube.com/watch?v=LXb3EKWsInQ"
     },
     blogPosts: [
@@ -296,25 +296,56 @@ const defaultContent: SiteContent = {
     ],
     services: [
         {
-            id: '1',
-            icon: 'Box',
+            id: "1",
+            title: "Industrial Product Design",
+            items: [
+                "3D Printing Product Design",
+                "CNC Machine & Mechanical Part Design",
+                "Plastic Mold & Injection Body Design",
+                "Sheet Metal Product Design",
+                "Product Casing & Enclosure Design",
+                "Industrial Product Animation"
+            ],
+            icon: "Box",
+            description: "Functional product design solutions developed for real-world manufacturing, prototyping, and production-ready execution."
+        },
+        {
+            id: "2",
+            title: "3D Animation & Motion Graphics",
+            items: [
+                "Product Visualization & Explainer Animation",
+                "3D Product Advertisements",
+                "3D Environment Design",
+                "Custom Character Design",
+                "Motion Graphics for Brands",
+                "Social Media Animation Content"
+            ],
+            icon: "Film",
+            description: "High-impact 3D animations and motion graphics created to explain products, strengthen branding, and capture audience attention."
+        },
+        {
+            id: "3",
             title: "3D Product Visualization",
-            description: "Photorealistic product renders and animations that bring your products to life with stunning detail and precision.",
-            items: ["Photorealistic Renders", "Product Animations", "360 Product Views", "AR Ready Assets"]
+            items: [
+                "Photorealistic Product Renders",
+                "Cinematic Product Animations",
+                "360° Product Views",
+                "AR & Marketing-Ready Assets"
+            ],
+            icon: "Box",
+            description: "Photorealistic product renders and cinematic visuals designed to showcase every detail with clarity, realism, and premium presentation."
         },
         {
-            id: '2',
-            icon: 'Film',
-            title: "Motion Graphics & Animation",
-            description: "Eye-catching animations for brands. From logo animations to full explainer videos that captivate audiences.",
-            items: ["Logo Animations", "Explainer Videos", "Social Media Content", "Title Sequences"]
-        },
-        {
-            id: '3',
-            icon: 'Video',
+            id: "1778186027863",
             title: "Commercial Video Production",
-            description: "Engaging commercials that sell. We create compelling video content that converts viewers into customers.",
-            items: ["TV Commercials", "Social Ads", "Product Videos", "Brand Films"]
+            items: [
+                "Commercial Advertisements",
+                "Social Media Ads",
+                "Product Showcase Videos",
+                "Brand Story Films"
+            ],
+            icon: "Video",
+            description: "Strategic commercial content crafted to promote brands, showcase products, and turn viewers into customers."
         }
     ],
     webServices: [
@@ -352,7 +383,7 @@ const defaultContent: SiteContent = {
             id: '1',
             name: "30 Seconds",
             duration: "DURATION",
-            price: "599",
+            price: "",
             features: ["AI Scripting", "Professional Voice Over", "Sound Design", "Full Animation", "Video Production", "SFX & VFX"],
             icon: 'Zap',
             isPopular: false
@@ -361,7 +392,7 @@ const defaultContent: SiteContent = {
             id: '2',
             name: "60 Seconds",
             duration: "DURATION",
-            price: "1199",
+            price: "",
             features: ["AI Scripting", "Professional Voice Over", "Sound Design", "Full Animation", "Video Production", "SFX & VFX"],
             icon: 'Sparkles',
             isPopular: true
@@ -370,7 +401,7 @@ const defaultContent: SiteContent = {
             id: '3',
             name: "120 Seconds",
             duration: "DURATION",
-            price: "1999",
+            price: "",
             features: ["AI Scripting", "Professional Voice Over", "Sound Design", "Full Animation", "Video Production", "SFX & VFX"],
             icon: 'Crown',
             isPopular: false
@@ -688,7 +719,18 @@ export const SiteProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }, (error) => {
             console.error("Detail load error:", error);
-            applyContent(readStoredContent());
+            // Fallback to localStorage if Firebase fails (e.g. invalid config)
+            if (typeof window !== 'undefined') {
+                const saved = window.localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        applyContent(parsed);
+                    } catch (e) {
+                        console.error("Error parsing local storage fallback:", e);
+                    }
+                }
+            }
         });
 
         return () => unsubscribe();
